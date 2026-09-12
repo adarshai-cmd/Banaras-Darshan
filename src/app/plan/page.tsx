@@ -1,5 +1,5 @@
 import React from "react";
-import { CalendarCheck, Compass, Sparkles, MapPin, DollarSign, Clock } from "lucide-react";
+import { CalendarCheck, Compass, DollarSign, Clock } from "lucide-react";
 import { TripPlannerWidget } from "@/components/trip/TripPlannerWidget";
 import { GlassCard } from "@/components/ui/GlassCard";
 

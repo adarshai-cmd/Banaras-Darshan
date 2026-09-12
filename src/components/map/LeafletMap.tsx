@@ -111,6 +111,8 @@ export function LeafletMap({
         return "#d4af37"; // Antique Gold
       case "HOTEL":
         return "#8b5cf6"; // Purple
+      case "PARKING":
+        return "#0284c7"; // Transit Blue
       default:
         return "#10b981"; // Emerald
     }
@@ -198,6 +200,8 @@ export function LeafletMap({
                   ? "🌊"
                   : p.category === "FOOD"
                   ? "🍲"
+                  : p.category === "PARKING"
+                  ? "🅿️"
                   : "📍"
               }
             </span>

@@ -1,0 +1,277 @@
+// Prisma schema for Banaras Darshan (Supabase PostgreSQL)
+// Use this schema when connecting directly to Supabase PostgreSQL database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  name         String
+  avatar       String?
+  bio          String?
+  role         String   @default("USER") // USER, ADMIN, MODERATOR
+  reputation   Int      @default(10)
+  badge        String   @default("New Explorer")
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  savedPlaces SavedPlace[]
+  trips       Trip[]
+  sessions    Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Place {
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  name             String
+  hindiName        String?
+  category         String // TEMPLE, GHAT, FOOD, HOTEL, STREET, EXPERIENCE, HIDDEN
+  subCategory      String? // e.g. "Morning Aarti", "Street Chaat", "Heritage Fort", "Weaving Colony", "Hostel"
+  tagline          String
+  description      String
+  history          String?
+  address          String
+  area             String // Assi, Dashashwamedh, Godowlia, Cantonment, Chowk, etc.
+  latitude         Float
+  longitude        Float
+  image            String
+  fallbackImage    String?
+  rating           Float?
+  reviewCount      Int?
+  approxBudget     String // e.g. "Free", "₹50 - ₹150", "₹1,500 - ₹3,500"
+  budgetTier       String // BUDGET, MID_RANGE, LUXURY, FREE
+  bestTimeToVisit  String? // e.g. "5:00 AM - 7:30 AM", "Evening 6:00 PM"
+  openingHours     String?
+  visitingTips     String?
+  safetyNotes      String?
+  isVerified       Boolean   @default(true)
+  isFeatured       Boolean   @default(false)
+  isHiddenGem      Boolean   @default(false)
+  tags             String // Comma separated tags
+  popularDishes    String? // For food
+  isPureVeg        Boolean?  @default(false)
+  amenities        String? // For stays: comma separated e.g. "Ghat View,WiFi,AC,Breakfast"
+  nearestHub       String? // e.g. "Cantt Railway Station: 4.5km"
+  sourceName       String? // e.g. "Varanasi Tourism / Official Trust"
+  sourceUrl        String?
+  parkingInfo      String? // JSON formatted nearby parking details
+  galleryJson      String? // JSON formatted array of gallery images
+  nearbyPlacesJson String? // JSON formatted array of nearby places
+  lastVerifiedAt   DateTime? @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  savedBy SavedPlace[]
+}
+
+model CommunityMessage {
+  id                 String   @id @default(cuid())
+  userId             String
+  userName           String
+  userBadge          String   @default("New Explorer")
+  userAvatar         String?
+  channel            String   @default("general")
+  content            String
+  image              String?
+  isVerified         Boolean  @default(false)
+  verifiedNote       String?
+  status             String   @default("APPROVED") // APPROVED, HELD_FOR_REVIEW, REJECTED
+  moderationScore    Float    @default(1.0)
+  moderationReason   String?
+  moderationCategory String?  @default("NONE")
+  helpfulCount       Int      @default(0)
+  createdAt          DateTime @default(now())
+
+  replies CommunityReply[]
+  reports Report[]
+}
+
+model CommunityReply {
+  id         String   @id @default(cuid())
+  messageId  String
+  userId     String
+  userName   String
+  userBadge  String   @default("New Explorer")
+  content    String
+  isVerified Boolean  @default(false)
+  status     String   @default("APPROVED")
+  createdAt  DateTime @default(now())
+
+  message CommunityMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id            String   @id @default(cuid())
+  reporterName  String   @default("Traveler")
+  targetType    String // MESSAGE, PLACE, USER
+  targetId      String
+  targetContent String?
+  reason        String
+  details       String?
+  status        String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  createdAt     DateTime @default(now())
+
+  message CommunityMessage? @relation(fields: [targetId], references: [id], onDelete: Cascade)
+}
+
+model ModerationLog {
+  id          String   @id @default(cuid())
+  action      String // AUTO_FLAG, AUTO_REJECT, ADMIN_APPROVE, ADMIN_REJECT
+  targetType  String
+  targetId    String
+  matchedRule String?
+  severity    String? // LOW, MEDIUM, HIGH, CRITICAL
+  snippet     String?
+  createdAt   DateTime @default(now())
+}
+
+model Trip {
+  id            String   @id @default(cuid())
+  userId        String?
+  title         String
+  durationDays  Int
+  budgetTier    String
+  travelStyle   String
+  groupType     String
+  itineraryJson String
+  createdAt     DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model SavedPlace {
+  id        String   @id @default(cuid())
+  userId    String
+  placeId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, placeId])
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  category    String
+  rating      Int      @default(5)
+  message     String
+  screenshot  String?
+  pageUrl     String?
+  contactInfo String?
+  status      String   @default("NEW")
+  createdAt   DateTime @default(now())
+}
+
+model PlaceSuggestion {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  address     String
+  description String
+  speciality  String?
+  submittedBy String?
+  userId      String?
+  photoUrl    String?
+  latitude    Float?
+  longitude   Float?
+  sourceRef   String?
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GalleryImage {
+  id         String   @id @default(cuid())
+  title      String?
+  caption    String?
+  imageUrl   String
+  category   String   @default("GENERAL")
+  placeId    String?
+  placeName  String?
+  isFeatured Boolean  @default(false)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ParkingLocation {
+  id               String   @id @default(cuid())
+  name             String
+  address          String
+  area             String
+  latitude         Float
+  longitude        Float
+  capacity         String?
+  parkingType      String   @default("MUNICIPAL")
+  timing           String?
+  vehicleSupport   String   @default("BOTH")
+  feeStatus        String   @default("PAID")
+  feeRate          String?
+  image            String?
+  associatedPlaces String?
+  directionsNote   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  category  String   @default("GENERAL")
+  updatedAt DateTime @updatedAt
+}
+
+model Promotion {
+  id                   String    @id @default(cuid())
+  title                String
+  shortTitle           String?
+  category             String    @default("EVENT")
+  badgeText            String?
+  description          String
+  imageUrl             String
+  additionalImages     String?
+  ctaText              String    @default("View Details")
+  destinationUrl       String?
+  websiteUrl           String?
+  bookingUrl           String?
+  location             String?
+  address              String?
+  contactPhone         String?
+  contactEmail         String?
+  startDate            DateTime?
+  endDate              DateTime?
+  startTime            String?
+  endTime              String?
+  placement            String    @default("BOTH") // LEFT, RIGHT, BOTH
+  priority             Int       @default(5)
+  displayOrder         Int       @default(0)
+  isActive             Boolean   @default(true)
+  isFeatured           Boolean   @default(false)
+  autoRotationDuration Int       @default(4500)
+  impressionCount      Int       @default(0)
+  clickCount           Int       @default(0)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}

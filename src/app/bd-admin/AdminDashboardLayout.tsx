@@ -78,7 +78,13 @@ type TabType =
   | "security";
 
 export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps) {
-  const [currentTab, setCurrentTab] = useState<TabType>("dashboard");
+  const [currentTab, setCurrentTab] = useState<TabType>(() => {
+    if (typeof window !== "undefined") {
+      const tabParam = new URLSearchParams(window.location.search).get("tab") as TabType;
+      if (tabParam) return tabParam;
+    }
+    return "dashboard";
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -293,10 +299,6 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
   }, []);
 
   // Initial load and tab switching
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
   useEffect(() => {
     if (currentTab === "dashboard") {
       loadStats();

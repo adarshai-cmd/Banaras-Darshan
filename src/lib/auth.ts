@@ -127,8 +127,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     }
 
     return session.user;
-  } catch (err: any) {
-    if (err?.digest === "DYNAMIC_SERVER_USAGE") {
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err && err.digest === "DYNAMIC_SERVER_USAGE") {
       throw err;
     }
     console.error("Error retrieving current user:", err);

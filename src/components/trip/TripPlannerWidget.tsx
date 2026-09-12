@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   CalendarCheck,
-  MapPin,
   Clock,
   CircleDollarSign,
   Sparkles,
@@ -14,9 +13,7 @@ import {
   Printer,
   BookmarkCheck,
   CheckCircle2,
-  Info,
   AlertCircle,
-  RotateCcw,
 } from "lucide-react";
 import { GlassCard, Button, Badge } from "@/components/ui/GlassCard";
 
@@ -72,7 +69,7 @@ export function TripPlannerWidget() {
   const [budgetInput, setBudgetInput] = useState<string>("10000");
   const [groupType, setGroupType] = useState<string>("Solo");
   const [travelStyle, setTravelStyle] = useState<string>("Spiritual & Culture");
-  const [places, setPlaces] = useState<any[]>([]);
+  const [, setPlaces] = useState<Record<string, unknown>[]>([]);
   const [generatedTrip, setGeneratedTrip] = useState<GeneratedTrip | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
@@ -112,7 +109,7 @@ export function TripPlannerWidget() {
 
     // Compute dynamic itinerary from actual places
     setTimeout(() => {
-      const trip = calculateDynamicItinerary(days, budget, groupType, travelStyle, places);
+      const trip = calculateDynamicItinerary(days, budget, groupType, travelStyle);
       setGeneratedTrip(trip);
       setIsGenerating(false);
     }, 400);
@@ -491,14 +488,12 @@ function calculateDynamicItinerary(
   days: number,
   budget: number,
   groupType: string,
-  travelStyle: string,
-  places: any[]
+  travelStyle: string
 ): GeneratedTrip {
   const perDayBudget = Math.round(budget / days);
 
   // Determine stay category based on daily budget
   let stayTier = "BUDGET";
-  let stayCostPerNight = "₹600–₹1,000/night (approx.)";
   let recommendedStay = {
     name: "Zostel Varanasi / Ganpati Guest House",
     slug: "zostel-varanasi",
@@ -509,7 +504,6 @@ function calculateDynamicItinerary(
 
   if (perDayBudget >= 5000) {
     stayTier = "LUXURY";
-    stayCostPerNight = "₹8,000–₹18,000/night (approx.)";
     recommendedStay = {
       name: "BrijRama Palace / Taj Ganges",
       slug: "brijrama-palace",
@@ -519,7 +513,6 @@ function calculateDynamicItinerary(
     };
   } else if (perDayBudget >= 2200) {
     stayTier = "MID_RANGE";
-    stayCostPerNight = "₹1,800–₹3,200/night (approx.)";
     recommendedStay = {
       name: "Hotel Surya Kaiser Palace / Hotel Ganges View",
       slug: "hotel-surya-kaiser-palace",

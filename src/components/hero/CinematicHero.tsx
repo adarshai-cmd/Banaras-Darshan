@@ -15,9 +15,9 @@ export function CinematicHero() {
 
   const samplePrompts = [
     "Best breakfast under ₹150?",
+    "Where to park car near Godowlia?",
     "Which ghat should I visit at sunset?",
     "Best budget hotel near Kashi Vishwanath?",
-    "I have 2 days and ₹3000. Plan my trip.",
   ];
 
   const handleSearch = (e: React.FormEvent) => {

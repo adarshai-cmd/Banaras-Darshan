@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Compass,
   Search,
   CheckCircle2,
   Sparkles,
+  SquareParking,
 } from "lucide-react";
 import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
 import { GlassCard, Button } from "@/components/ui/GlassCard";
@@ -125,6 +127,13 @@ function ExploreContent() {
               {cat.label}
             </button>
           ))}
+          <Link
+            href="/parking"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border border-sky-500/40 bg-sky-50 text-sky-900 hover:bg-sky-100 shadow-sm flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <SquareParking className="w-3.5 h-3.5 text-sky-600" />
+            <span>Parking Stands (4) 🅿️</span>
+          </Link>
         </div>
 
         {/* Secondary Filters Bar */}

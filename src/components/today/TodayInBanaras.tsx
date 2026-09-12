@@ -7,7 +7,6 @@ import {
   Waves,
   CloudSun,
   Clock,
-  CheckCircle2,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 
@@ -30,56 +29,41 @@ export function TodayInBanaras() {
   });
 
   useEffect(() => {
+    let isMounted = true;
     const updateTime = () => {
       const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-      );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-
-    // Fetch live Varanasi meteorological & astronomical data from Open-Meteo
-    const fetchWeather = async () => {
-      try {
-        const res = await fetch(
-          "https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=temperature_2m,relative_humidity_2m&daily=sunrise,sunset&timezone=Asia%2FKolkata"
+      if (isMounted) {
+        setCurrentTime(
+          now.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          })
         );
-        if (res.ok) {
-          const data = await res.json();
-          const currentTemp = Math.round(data.current?.temperature_2m ?? 28);
-          const currentHumidity = Math.round(data.current?.relative_humidity_2m ?? 62);
-          
-          let sunriseStr = "05:42 AM";
-          let sunsetStr = "06:18 PM";
-          if (data.daily?.sunrise?.[0]) {
-            const sDate = new Date(data.daily.sunrise[0]);
-            sunriseStr = sDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-          }
-          if (data.daily?.sunset?.[0]) {
-            const setDate = new Date(data.daily.sunset[0]);
-            sunsetStr = setDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-          }
-
-          setWeather({
-            temp: currentTemp,
-            humidity: currentHumidity,
-            sunrise: sunriseStr,
-            sunset: sunsetStr,
-            isLive: true,
-          });
-        }
-      } catch {
-        // Fallback remains active
       }
     };
+    updateTime();
+    const interval = setInterval(updateTime, 10000);
 
-    fetchWeather();
-    return () => clearInterval(interval);
+    // Fetch from cached local weather API
+    fetch("/api/weather")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data?.weather) return;
+        setWeather({
+          temp: data.weather.temperature ?? 28,
+          humidity: data.weather.humidity ?? 62,
+          sunrise: data.weather.sunrise ?? "05:42 AM",
+          sunset: data.weather.sunset ?? "06:18 PM",
+          isLive: true,
+        });
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   return (

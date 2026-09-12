@@ -7,7 +7,7 @@ import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
 import { calculateHaversineDistance } from "@/lib/distance";
 
 export function ExploreNearMeWidget({ initialPlaces }: { initialPlaces: PlaceCardData[] }) {
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [_userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationName, setLocationName] = useState<string>("Varanasi Center (Godowlia)");
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [sortedPlaces, setSortedPlaces] = useState<PlaceCardData[]>(initialPlaces);

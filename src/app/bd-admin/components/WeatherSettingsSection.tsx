@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   Sliders,
   ShieldCheck,
-  Calendar,
 } from "lucide-react";
 
 interface WeatherSettingsSectionProps {
@@ -38,8 +37,8 @@ export function WeatherSettingsSection({ onShowToast }: WeatherSettingsSectionPr
   const [isTesting, setIsTesting] = useState(false);
 
   // Load config
-  const loadConfig = async () => {
-    setIsLoadingConfig(true);
+  const loadConfig = async (showLoader = false) => {
+    if (showLoader) setIsLoadingConfig(true);
     try {
       const res = await fetch("/api/bd-admin/weather");
       const data = await res.json();
@@ -49,32 +48,33 @@ export function WeatherSettingsSection({ onShowToast }: WeatherSettingsSectionPr
     } catch (e) {
       console.error(e);
     } finally {
-      setIsLoadingConfig(false);
+      if (showLoader) setIsLoadingConfig(false);
     }
   };
 
   // Test live weather fetch
-  const testLiveWeather = async () => {
-    setIsTesting(true);
+  const testLiveWeather = async (isManual = false) => {
+    if (isManual) setIsTesting(true);
     try {
       const res = await fetch("/api/weather");
       const data = await res.json();
       if (data.success && data.weather) {
         setWeatherPreview(data.weather);
-        onShowToast("Live weather forecast retrieved successfully.");
-      } else {
+        if (isManual) onShowToast("Live weather forecast retrieved successfully.");
+      } else if (isManual) {
         onShowToast("Unable to fetch live weather preview.", "error");
       }
     } catch {
-      onShowToast("Network error fetching weather.", "error");
+      if (isManual) onShowToast("Network error fetching weather.", "error");
     } finally {
-      setIsTesting(false);
+      if (isManual) setIsTesting(false);
     }
   };
 
   useEffect(() => {
-    loadConfig();
-    testLiveWeather();
+    loadConfig(false);
+    testLiveWeather(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -245,7 +245,7 @@ export function WeatherSettingsSection({ onShowToast }: WeatherSettingsSectionPr
             <span>Live Meteorological Forecast Preview</span>
           </h2>
           <button
-            onClick={testLiveWeather}
+            onClick={() => testLiveWeather(true)}
             disabled={isTesting}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition-colors disabled:opacity-50"
           >

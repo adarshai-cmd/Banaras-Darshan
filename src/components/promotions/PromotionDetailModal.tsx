@@ -4,7 +4,6 @@ import React, { useEffect } from "react";
 import Image from "next/image";
 import {
   X,
-  Calendar,
   Clock,
   MapPin,
   Phone,
@@ -12,7 +11,6 @@ import {
   ExternalLink,
   Navigation,
   Sparkles,
-  Tag,
   CheckCircle2,
 } from "lucide-react";
 

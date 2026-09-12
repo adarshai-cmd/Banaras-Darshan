@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { MapPin, Navigation, Layers, Compass, ArrowRight } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { RoutePlannerWidget } from "@/components/map/RoutePlannerWidget";
 import { BanarasWeatherWidget } from "@/components/weather/BanarasWeatherWidget";
-import { GlassCard, Button } from "@/components/ui/GlassCard";
+import { ParkingSection } from "@/components/parking/ParkingSection";
 import { MapMarkerData } from "@/components/map/LeafletMap";
 
 // Dynamically import Leaflet map with no SSR to prevent leaflet window reference errors
@@ -25,23 +25,57 @@ const LeafletMap = dynamic(
 export default function MapPage() {
   const [places, setPlaces] = useState<MapMarkerData[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
-  const [loading, setLoading] = useState<boolean>(true);
+  const [, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchAllPlaces = async () => {
+    const fetchAllPins = async () => {
       try {
-        const res = await fetch("/api/places");
-        const data = await res.json();
-        if (data.success) {
-          setPlaces(data.places);
+        const [placesRes, parkingRes] = await Promise.all([
+          fetch("/api/places").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/parking").then((r) => (r.ok ? r.json() : null)),
+        ]);
+
+        const combinedPins: MapMarkerData[] = [];
+
+        if (placesRes?.success && Array.isArray(placesRes.places)) {
+          combinedPins.push(...placesRes.places);
         }
+
+        if (parkingRes?.success && Array.isArray(parkingRes.parkings)) {
+          const parkingMarkers: MapMarkerData[] = parkingRes.parkings.map(
+            (pk: {
+              id: string;
+              name: string;
+              latitude: number;
+              longitude: number;
+              area: string;
+              parkingType: string;
+              capacity?: string;
+              feeRate?: string;
+              feeStatus?: string;
+            }) => ({
+              id: pk.id,
+              name: pk.name,
+              category: "PARKING",
+              latitude: pk.latitude,
+              longitude: pk.longitude,
+              approxBudget: pk.feeRate || pk.feeStatus || "Paid Stand",
+              tagline: `${pk.parkingType === "MULTI_LEVEL" ? "Multi-Level Smart Parking" : "Surface Stand"} • ${pk.capacity || "Vehicle Stand"}`,
+              area: pk.area,
+              rating: null,
+            })
+          );
+          combinedPins.push(...parkingMarkers);
+        }
+
+        setPlaces(combinedPins);
       } catch (err) {
         console.error("Error fetching map markers", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchAllPlaces();
+    fetchAllPins();
   }, []);
 
   const filterCategories = [
@@ -51,10 +85,11 @@ export default function MapPage() {
     { id: "FOOD", label: "Food & Sweets" },
     { id: "HOTEL", label: "Hotels & Stays" },
     { id: "HIDDEN", label: "Hidden Gems" },
+    { id: "PARKING", label: "Parking Stands 🅿️" },
   ];
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -63,10 +98,10 @@ export default function MapPage() {
             <span>Cartographic Explorer</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 font-serif">
-            Interactive Banaras Map
+            Interactive Banaras Map & Mobility
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1 font-normal">
-            Locate 84 ghats, ancient temples, legendary food stalls, and heritage stays on live OpenStreetMap tiles
+            Locate 84 ghats, ancient temples, legendary food stalls, heritage stays, and official parking stands on live OpenStreetMap tiles
           </p>
         </div>
 
@@ -106,8 +141,13 @@ export default function MapPage() {
         <RoutePlannerWidget />
       </div>
 
+      {/* Official Municipal Parking Stands Section */}
+      <div className="pt-6 border-t border-slate-200">
+        <ParkingSection />
+      </div>
+
       {/* Banaras Live Weather & 5-Day Forecast Panel */}
-      <div className="pt-4 border-t border-slate-200">
+      <div className="pt-6 border-t border-slate-200">
         <BanarasWeatherWidget />
       </div>
     </div>

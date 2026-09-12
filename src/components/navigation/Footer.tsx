@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Sparkles, Shield, Heart, Compass, MapPin } from "lucide-react";
+import { Sparkles, Shield, Heart, Compass, MapPin, SquareParking } from "lucide-react";
 
 export function Footer() {
   return (
@@ -76,6 +76,12 @@ export function Footer() {
                 <Link href="/map" className="hover:text-amber-300 transition-colors flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-amber-400" />
                   Interactive Map & Routes
+                </Link>
+              </li>
+              <li>
+                <Link href="/parking" className="hover:text-amber-300 transition-colors flex items-center gap-1.5">
+                  <SquareParking className="w-3.5 h-3.5 text-sky-400" />
+                  Municipal Parking Stands
                 </Link>
               </li>
               <li>

@@ -14,9 +14,9 @@ import {
   Users,
   Sparkles,
   Shield,
+  SquareParking,
   Menu,
   X,
-  User,
   LogOut,
   LogIn,
 } from "lucide-react";
@@ -78,6 +78,7 @@ export function Navbar() {
     { href: "/temples", label: "Temples", icon: Landmark },
     { href: "/ghats", label: "Ghats", icon: Waves },
     { href: "/map", label: "Map", icon: MapPin },
+    { href: "/parking", label: "Parking", icon: SquareParking },
     { href: "/plan", label: "Plan My Trip", icon: CalendarCheck },
     { href: "/community", label: "Community", icon: Users },
   ];

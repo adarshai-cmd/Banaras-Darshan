@@ -145,7 +145,7 @@ export async function fetchOSRMRoute(
           (c: [number, number]) => [c[1], c[0]]
         );
 
-        let fare = mode === "WALKING" ? "Free (Walking)" : "Fare unavailable";
+        const fare = mode === "WALKING" ? "Free (Walking)" : "Fare unavailable";
 
         return {
           distanceKm: distKm,

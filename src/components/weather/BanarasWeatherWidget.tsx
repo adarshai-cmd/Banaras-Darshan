@@ -12,14 +12,10 @@ import {
   Droplets,
   Sunrise,
   Sunset,
-  Compass,
   Sparkles,
   RefreshCw,
   Umbrella,
-  ShieldCheck,
-  Thermometer,
 } from "lucide-react";
-import { GlassCard } from "@/components/ui/GlassCard";
 
 interface ForecastDay {
   day: string;
@@ -79,7 +75,34 @@ export function BanarasWeatherWidget() {
   };
 
   useEffect(() => {
-    fetchWeather();
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/weather");
+        if (res.ok) {
+          const json = await res.json();
+          if (!isMounted) return;
+          if (json.enabled === false) {
+            setIsEnabled(false);
+            return;
+          }
+          if (json.weather) {
+            setData(json.weather);
+            setIsEnabled(true);
+          }
+        }
+      } catch (err) {
+        console.error("Weather fetch failed:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (!isEnabled) return null;

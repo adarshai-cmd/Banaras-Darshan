@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import {
   Shield,
   PhoneCall,
@@ -6,9 +7,9 @@ import {
   LifeBuoy,
   HeartHandshake,
   CheckCircle2,
-  FileText,
+  SquareParking,
 } from "lucide-react";
-import { GlassCard, Badge } from "@/components/ui/GlassCard";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 export default function SafetyPage() {
   const helplines = [
@@ -166,6 +167,43 @@ export default function SafetyPage() {
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
                 <strong className="text-slate-900">Drinking Water:</strong> Stick to bottled or filtered RO water, especially while enjoying spicy street chaat.
+              </span>
+            </li>
+          </ul>
+        </GlassCard>
+
+        {/* Vehicle Towing, No-Vehicle Zones & Parking Safety */}
+        <GlassCard className="p-6 space-y-4 bg-white/90 border border-sky-500/30 shadow-sm" hoverEffect={false}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5 text-sky-900 font-serif text-lg font-bold">
+              <SquareParking className="w-5 h-5 text-sky-600" />
+              <span>Vehicle Entry Restrictions & Parking Safety</span>
+            </div>
+            <Link
+              href="/parking"
+              className="text-xs font-semibold text-sky-700 hover:text-sky-800 underline flex items-center gap-1"
+            >
+              <span>View 4 Verified Stands</span>
+              <span>↗</span>
+            </Link>
+          </div>
+          <ul className="space-y-2.5 text-xs text-slate-700 leading-relaxed">
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-slate-900">Old City No-Vehicle Corridors:</strong> Private four-wheelers are prohibited between Godowlia and Dashashwamedh, as well as Maidagin towards Chowk, between 07:00 AM and 10:00 PM.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-slate-900">Wheel Clamping & Towing:</strong> Parking on road shoulders or lane corners will result in prompt wheel clamping by traffic police. Always utilize the designated multi-level facilities at Godowlia or Maidagin.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-slate-900">E-Rickshaws for the Last Mile:</strong> Park at the official municipal stands and take shared or private e-rickshaws (₹10–₹30) directly to temple gates.
               </span>
             </li>
           </ul>

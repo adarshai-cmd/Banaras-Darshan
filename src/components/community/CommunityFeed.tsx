@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  MessageCircle,
   Send,
   Reply,
   Languages,
@@ -10,9 +9,7 @@ import {
   LogIn,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
 } from "lucide-react";
-import { GlassCard, Button } from "@/components/ui/GlassCard";
 import { AuthModal } from "@/components/modals/AuthModal";
 
 interface ReplyItem {
@@ -80,8 +77,8 @@ export function CommunityFeed() {
   }, []);
 
   // Fetch real messages
-  const fetchMessages = () => {
-    setIsLoading(true);
+  const fetchMessages = (showLoading = false) => {
+    if (showLoading) setIsLoading(true);
     fetch("/api/community/messages?channel=all")
       .then((res) => res.json())
       .then((data) => {
@@ -96,7 +93,26 @@ export function CommunityFeed() {
   };
 
   useEffect(() => {
-    fetchMessages();
+    let isMounted = true;
+    fetch("/api/community/messages?channel=all")
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data?.success && Array.isArray(data.messages)) {
+          setMessages(data.messages);
+        } else if (isMounted) {
+          setMessages([]);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setMessages([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Post message

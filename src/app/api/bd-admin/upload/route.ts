@@ -3,6 +3,11 @@ import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
 import { requireAdminOrModerator } from "@/lib/auth";
+import {
+  isSupabaseConfigured,
+  uploadToSupabaseStorage,
+  deleteFromSupabaseStorage,
+} from "@/lib/supabase";
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -37,6 +42,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const files = formData.getAll("files") as File[];
     const singleFile = formData.get("file") as File | null;
+    const requestedBucket = (formData.get("bucket") as string)?.toLowerCase() || "places";
 
     const filesToProcess: File[] = [];
     if (singleFile && singleFile.size > 0) {
@@ -55,11 +61,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure uploads folder exists in /public/uploads
+    const useSupabase = isSupabaseConfigured();
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadsDir, { recursive: true });
 
-    const uploadedUrls: Array<{ url: string; originalName: string; size: number }> = [];
+    if (!useSupabase) {
+      // Ensure local directory exists for fallback
+      await fs.mkdir(uploadsDir, { recursive: true });
+    }
+
+    const uploadedUrls: Array<{
+      url: string;
+      originalName: string;
+      size: number;
+      storageProvider: "supabase" | "local";
+    }> = [];
 
     for (const file of filesToProcess) {
       if (!ALLOWED_MIME_TYPES.has(file.type)) {
@@ -90,23 +105,50 @@ export async function POST(req: NextRequest) {
         .substring(0, 30);
       const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
       const filename = `${cleanBase || "kashi"}-${uniqueSuffix}.${ext}`;
-      const targetPath = path.join(uploadsDir, filename);
-
       const buffer = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(targetPath, buffer);
 
-      const publicUrl = `/uploads/${filename}`;
+      let finalUrl = "";
+      let provider: "supabase" | "local" = "local";
+
+      if (useSupabase) {
+        try {
+          const supabaseUrl = await uploadToSupabaseStorage({
+            bucket: requestedBucket,
+            path: filename,
+            fileBuffer: buffer,
+            contentType: file.type,
+          });
+
+          if (supabaseUrl) {
+            finalUrl = supabaseUrl;
+            provider = "supabase";
+          }
+        } catch (supabaseErr) {
+          console.warn("Supabase storage upload failed, falling back to local storage:", supabaseErr);
+        }
+      }
+
+      // Local fallback if Supabase is not configured or failed
+      if (!finalUrl) {
+        await fs.mkdir(uploadsDir, { recursive: true });
+        const targetPath = path.join(uploadsDir, filename);
+        await fs.writeFile(targetPath, buffer);
+        finalUrl = `/uploads/${filename}`;
+        provider = "local";
+      }
+
       uploadedUrls.push({
-        url: publicUrl,
+        url: finalUrl,
         originalName: file.name,
         size: file.size,
+        storageProvider: provider,
       });
     }
 
     return NextResponse.json({
       success: true,
       message: `Successfully uploaded ${uploadedUrls.length} image(s).`,
-      url: uploadedUrls[0].url, // Primary URL for single uploads
+      url: uploadedUrls[0].url,
       files: uploadedUrls,
     });
   } catch (error) {
@@ -131,25 +173,51 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const fileUrl = searchParams.get("url");
 
-    if (!fileUrl || !fileUrl.startsWith("/uploads/")) {
+    if (!fileUrl) {
       return NextResponse.json(
         { success: false, error: "Invalid upload URL provided." },
         { status: 400 }
       );
     }
 
-    const filename = path.basename(fileUrl);
-    const targetPath = path.join(process.cwd(), "public", "uploads", filename);
+    // Check if URL is from Supabase Storage
+    if (fileUrl.includes("/storage/v1/object/public/")) {
+      try {
+        const parts = fileUrl.split("/storage/v1/object/public/")[1]?.split("/");
+        if (parts && parts.length >= 2) {
+          const bucket = parts[0];
+          const storagePath = parts.slice(1).join("/");
+          await deleteFromSupabaseStorage(bucket, storagePath);
+          return NextResponse.json({
+            success: true,
+            message: "Image file removed from Supabase storage.",
+          });
+        }
+      } catch (err) {
+        console.warn("Could not delete from Supabase storage:", err);
+      }
+    }
 
-    try {
-      await fs.unlink(targetPath);
-    } catch {
-      // File may already have been removed
+    // Local filesystem removal
+    if (fileUrl.startsWith("/uploads/")) {
+      const filename = path.basename(fileUrl);
+      const targetPath = path.join(process.cwd(), "public", "uploads", filename);
+
+      try {
+        await fs.unlink(targetPath);
+      } catch {
+        // File may already have been removed
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Image file removed from local storage.",
+      });
     }
 
     return NextResponse.json({
       success: true,
-      message: "Image file removed from server storage.",
+      message: "Image reference cleared.",
     });
   } catch (error) {
     console.error("Admin file deletion error:", error);

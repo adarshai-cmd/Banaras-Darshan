@@ -48,8 +48,8 @@ export function PromotionsSection({ onShowToast, onStatsUpdate }: PromotionsSect
     title: "",
   });
 
-  const loadPromotions = useCallback(async () => {
-    setIsLoading(true);
+  const loadPromotions = useCallback(async (showLoader = false) => {
+    if (showLoader) setIsLoading(true);
     try {
       let url = "/api/bd-admin/promotions";
       const params = new URLSearchParams();
@@ -151,7 +151,7 @@ export function PromotionsSection({ onShowToast, onStatsUpdate }: PromotionsSect
         {/* Refresh & Add Button */}
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={loadPromotions}
+            onClick={() => loadPromotions(true)}
             title="Refresh list"
             className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
           >

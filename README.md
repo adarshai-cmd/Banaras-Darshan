@@ -214,16 +214,30 @@ Copy the `.env.example` template to `.env`:
 ```bash
 cp .env.example .env
 ```
-> **Note**: The default SQLite database configuration works immediately without requiring any external cloud services or API keys!
 
-### 4. Initialize & Seed Database
+### 4. Supabase Integration (Free Tier)
+To connect the project to your Supabase project:
+1. Open your **Supabase Dashboard** -> **SQL Editor**.
+2. Run `supabase/migrations/20260913_banaras_darshan_schema_and_rls.sql` to initialize all tables and activate Row Level Security (RLS) policies.
+3. Run `supabase/storage_setup.sql` to create public storage buckets (`places`, `promotions`, `gallery`, `avatars`, `feedback`) and storage policies.
+4. Add your Supabase project details to your `.env`:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+   SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+   # Transaction Pooler (Port 6543)
+   DATABASE_URL="postgresql://postgres.your-project-ref:password@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+   ```
+> **Note**: For local offline development without a Supabase connection, the built-in SQLite database and local image upload storage work immediately out of the box with zero configuration!
+
+### 5. Initialize & Seed Database
 Generate the Prisma client, push database tables, and seed authentic Banaras records:
 ```bash
 npx prisma db push
 npx tsx prisma/seed.ts
 ```
 
-### 5. Start Development Server
+### 6. Start Development Server
 ```bash
 npm run dev
 ```

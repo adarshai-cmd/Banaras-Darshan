@@ -12,7 +12,6 @@ import {
   Loader2,
   CloudSun,
   Umbrella,
-  Sparkles,
 } from "lucide-react";
 import {
   fetchOSRMRoute,

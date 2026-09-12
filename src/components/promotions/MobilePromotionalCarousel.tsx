@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { Sparkles, ArrowRight, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import { PromotionData, PromotionDetailModal } from "./PromotionDetailModal";
 
 interface MobilePromotionalCarouselProps {

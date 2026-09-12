@@ -13,9 +13,7 @@ import {
   Users,
   Shield,
   ArrowRight,
-  CheckCircle2,
-  PhoneCall,
-  Flame,
+  SquareParking,
 } from "lucide-react";
 import { CinematicHero } from "@/components/hero/CinematicHero";
 import { TodayInBanaras } from "@/components/today/TodayInBanaras";
@@ -26,29 +24,53 @@ import { TripPlannerWidget } from "@/components/trip/TripPlannerWidget";
 import { CommunityFeed } from "@/components/community/CommunityFeed";
 import { AIAssistantWidget } from "@/components/ai/AIAssistantWidget";
 import { BanarasWeatherWidget } from "@/components/weather/BanarasWeatherWidget";
-import { Button, GlassCard, Badge } from "@/components/ui/GlassCard";
+import { ParkingSection } from "@/components/parking/ParkingSection";
+import { Button } from "@/components/ui/GlassCard";
 
 // Dynamic data fetching with fallback revalidation
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const allPlaces = await prisma.place.findMany({
-    orderBy: [{ isFeatured: "desc" }, { rating: "desc" }],
-  });
+  const [allPlaces, parkings] = await Promise.all([
+    prisma.place.findMany({
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        hindiName: true,
+        category: true,
+        subCategory: true,
+        tagline: true,
+        area: true,
+        latitude: true,
+        longitude: true,
+        image: true,
+        fallbackImage: true,
+        rating: true,
+        reviewCount: true,
+        approxBudget: true,
+        budgetTier: true,
+        isFeatured: true,
+        isHiddenGem: true,
+      },
+      orderBy: [{ isFeatured: "desc" }, { rating: "desc" }],
+    }),
+    prisma.parkingLocation.findMany({
+      orderBy: { id: "asc" },
+    }),
+  ]);
 
   const popularPlaces = allPlaces.filter((p) => p.isFeatured).slice(0, 4);
   const foodPlaces = allPlaces.filter((p) => p.category === "FOOD").slice(0, 4);
   const templePlaces = allPlaces.filter((p) => p.category === "TEMPLE").slice(0, 3);
   const ghatPlaces = allPlaces.filter((p) => p.category === "GHAT").slice(0, 3);
-  const hotelPlaces = allPlaces.filter((p) => p.category === "HOTEL").slice(0, 3);
-  const hiddenPlaces = allPlaces.filter((p) => p.isHiddenGem || p.category === "HIDDEN" || p.category === "STREET").slice(0, 3);
 
   const categories = [
-    { title: "Temples", icon: Landmark, href: "/temples", desc: "Jyotirlinga & ancient shrines", count: "12+ Verified" },
+    { title: "Temples", icon: Landmark, href: "/temples", desc: "Jyotirlinga & ancient shrines", count: "12+ Shrines" },
     { title: "Ghats", icon: Waves, href: "/ghats", desc: "Maha Aarti & sunrise steps", count: "84 Ghats" },
     { title: "Food", icon: Utensils, href: "/food", desc: "Tamatar chaat, lassi & paan", count: "25+ Famous" },
     { title: "Stay", icon: BedDouble, href: "/stay", desc: "Heritage palaces & hostels", count: "Verified Stays" },
-    { title: "Hidden Lanes", icon: Sparkles, href: "/hidden", desc: "Old galliyan & silk looms", count: "Offbeat Gems" },
+    { title: "Parking Stands", icon: SquareParking, href: "/parking", desc: "Municipal vehicle facilities", count: "4 Facilities" },
     { title: "Trip Planner", icon: CalendarCheck, href: "/plan", desc: "Personalized day-by-day plans", count: "Smart AI" },
   ];
 
@@ -238,11 +260,18 @@ export default async function HomePage() {
 
           <RoutePlannerWidget />
 
-          <div className="text-center pt-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
             <Link href="/map">
               <Button variant="outline" size="md" className="gap-2">
                 <MapPin className="w-4 h-4 text-amber-600" />
-                <span>Open Full-Screen Interactive Kashi Map</span>
+                <span>Open Interactive Kashi Map</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link href="/parking">
+              <Button variant="primary" size="md" className="gap-2 shadow-md shadow-orange-500/20">
+                <SquareParking className="w-4 h-4" />
+                <span>Municipal Parking Stands (4)</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -250,7 +279,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 8b. Dedicated Banaras Weather & Travel Forecast */}
+      {/* 8b. Official Municipal Parking & Vehicle Stands */}
+      <ParkingSection
+        initialParkings={parkings}
+        className="bg-[#FAF8F5] border-b border-amber-500/15"
+      />
+
+      {/* 8c. Dedicated Banaras Weather & Travel Forecast */}
       <BanarasWeatherWidget />
 
       {/* 9. Plan My Trip (Custom Itinerary Generator) */}

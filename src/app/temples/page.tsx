@@ -1,8 +1,8 @@
 import React from "react";
 import { prisma } from "@/lib/db";
-import { Landmark, ShieldAlert, Clock, Info, CheckCircle2 } from "lucide-react";
+import { Landmark, ShieldAlert } from "lucide-react";
 import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
-import { GlassCard, Badge } from "@/components/ui/GlassCard";
+import { Badge } from "@/components/ui/GlassCard";
 
 export const revalidate = 60;
 

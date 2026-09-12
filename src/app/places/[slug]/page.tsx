@@ -9,8 +9,6 @@ import {
   CheckCircle2,
   Navigation,
   Sparkles,
-  Share2,
-  Bookmark,
   CalendarCheck,
   Utensils,
   BedDouble,
@@ -18,12 +16,11 @@ import {
   AlertTriangle,
   ArrowLeft,
   Car,
-  Bike,
   Image as ImageIcon,
   Compass,
 } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
-import { Badge, Button, GlassCard } from "@/components/ui/GlassCard";
+import { Badge, GlassCard } from "@/components/ui/GlassCard";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -58,6 +55,80 @@ export default async function PlaceDetailPage({ params }: PageProps) {
       parkingData = JSON.parse(place.parkingInfo);
     } catch {
       parkingData = null;
+    }
+  }
+
+  // If place doesn't have custom parkingInfo, intelligently resolve nearest municipal facility
+  if (!parkingData?.primary) {
+    const areaLower = (place.area || "").toLowerCase();
+    const nameLower = place.name.toLowerCase();
+
+    if (
+      areaLower.includes("assi") ||
+      areaLower.includes("nagwa") ||
+      areaLower.includes("durgakund") ||
+      areaLower.includes("sankat") ||
+      areaLower.includes("bhu")
+    ) {
+      parkingData = {
+        primary: {
+          name: "Assi Ghat Dedicated Surface Parking",
+          distance: "200m – 800m",
+          feeStatus: "Paid (₹10-₹30/hr)",
+          bike: true,
+          car: true,
+          bus: false,
+          mapQuery: "Assi Ghat Parking Varanasi",
+        },
+      };
+    } else if (
+      areaLower.includes("maidagin") ||
+      areaLower.includes("kal bhairav") ||
+      areaLower.includes("golghar") ||
+      areaLower.includes("macchodari") ||
+      nameLower.includes("kaal bhairav")
+    ) {
+      parkingData = {
+        primary: {
+          name: "Maidagin Central Multi-Level Facility",
+          distance: "300m – 600m",
+          feeStatus: "Paid (₹15-₹35/hr)",
+          bike: true,
+          car: true,
+          bus: false,
+          mapQuery: "Town Hall Multi Level Parking Maidagin Varanasi",
+        },
+      };
+    } else if (
+      areaLower.includes("rajghat") ||
+      areaLower.includes("namo") ||
+      areaLower.includes("malviya") ||
+      nameLower.includes("namo ghat")
+    ) {
+      parkingData = {
+        primary: {
+          name: "Namo Ghat Northern Entrance Parking",
+          distance: "100m – 500m",
+          feeStatus: "Paid (₹10-₹30/hr)",
+          bike: true,
+          car: true,
+          bus: true,
+          mapQuery: "Namo Ghat Parking Varanasi",
+        },
+      };
+    } else {
+      // Central old city hub (Godowlia Multi-Level)
+      parkingData = {
+        primary: {
+          name: "Godowlia Multi-Level Smart Parking",
+          distance: "400m – 900m",
+          feeStatus: "Paid (₹15-₹35/hr)",
+          bike: true,
+          car: true,
+          bus: false,
+          mapQuery: "Godowlia Multi Level Parking Varanasi",
+        },
+      };
     }
   }
 
@@ -368,6 +439,14 @@ export default async function PlaceDetailPage({ params }: PageProps) {
                     <Navigation className="w-3 h-3 text-amber-600" />
                     <span>Navigate to Parking ↗</span>
                   </a>
+
+                  <div className="pt-1 flex items-center justify-between text-[11px]">
+                    <Link href="/parking" className="text-amber-700 hover:text-amber-800 font-semibold underline flex items-center gap-1">
+                      <span>View all 4 parking facilities</span>
+                      <span>→</span>
+                    </Link>
+                    <span className="text-[10px] text-slate-500 italic">24/7 Security</span>
+                  </div>
                 </div>
 
                 <p className="text-[10px] text-slate-500 italic">
