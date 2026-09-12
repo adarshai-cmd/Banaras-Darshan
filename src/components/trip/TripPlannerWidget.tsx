@@ -1,19 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import {
   CalendarCheck,
-  Clock,
   MapPin,
-  Sparkles,
-  Share2,
   Printer,
   BookmarkCheck,
-  CheckCircle2,
-  DollarSign,
-  Users2,
-  ArrowRight,
 } from "lucide-react";
 import { GlassCard, Button, Badge } from "@/components/ui/GlassCard";
 
@@ -37,7 +29,6 @@ export function TripPlannerWidget() {
   const [budgetTier, setBudgetTier] = useState<string>("BUDGET");
   const [travelStyle, setTravelStyle] = useState<string>("CULTURE_FOOD");
   const [groupType, setGroupType] = useState<string>("Couple");
-  const [isGenerated, setIsGenerated] = useState<boolean>(true);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
 
   // Dynamic generator based on user inputs
@@ -321,7 +312,7 @@ export function TripPlannerWidget() {
         </div>
         {savedSuccess && (
           <div className="mt-3 p-2.5 text-center text-xs text-emerald-800 bg-emerald-100 border border-emerald-400 rounded-xl font-medium animate-in fade-in">
-            ✓ Successfully saved to your "My Trip" dashboard!
+            ✓ Successfully saved to your &quot;My Trip&quot; dashboard!
           </div>
         )}
       </GlassCard>

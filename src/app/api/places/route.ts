@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Attach calculated distance if user coordinates provided
-    let results = places.map((p) => {
+    const results = places.map((p) => {
       let distanceKm: number | undefined = undefined;
       if (userLat !== null && userLng !== null) {
         distanceKm = calculateHaversineDistance(

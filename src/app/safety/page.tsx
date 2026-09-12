@@ -97,13 +97,13 @@ export default function SafetyPage() {
             <li className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                <strong className="text-slate-900">Cremation Wood "Donation" Scams:</strong> At Manikarnika Ghat, unscrupulous touts may approach claiming to collect money for cremation wood for poor families. The official temple and police repeatedly caution travelers to politely decline.
+                <strong className="text-slate-900">Cremation Wood &quot;Donation&quot; Scams:</strong> At Manikarnika Ghat, unscrupulous touts may approach claiming to collect money for cremation wood for poor families. The official temple and police repeatedly caution travelers to politely decline.
               </span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                <strong className="text-slate-900">Unsolicited "Silk Guides":</strong> Auto drivers or strangers offering free rides to "government silk factories" usually receive 30–50% showroom commissions. For authentic handloom silk, visit registered weaver colonies like Sarai Mohana directly.
+                <strong className="text-slate-900">Unsolicited &quot;Silk Guides&quot;:</strong> Auto drivers or strangers offering free rides to &quot;government silk factories&quot; usually receive 30–50% showroom commissions. For authentic handloom silk, visit registered weaver colonies like Sarai Mohana directly.
               </span>
             </li>
             <li className="flex items-start gap-2">

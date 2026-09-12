@@ -12,16 +12,14 @@ import {
   Share2,
   Navigation,
   Sparkles,
-  ShieldCheck,
   AlertTriangle,
-  Compass,
   Utensils,
   BedDouble,
   Info,
   CalendarCheck,
 } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
-import { Badge, Button } from "@/components/ui/GlassCard";
+import { Badge } from "@/components/ui/GlassCard";
 import { PlaceCardData } from "@/components/cards/PlaceCard";
 
 export function PlaceDetailsModal({
@@ -119,10 +117,16 @@ export function PlaceDetailsModal({
           {/* Bottom Title on Hero */}
           <div className="absolute bottom-4 left-4 right-4 z-10">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-black/70 backdrop-blur-md text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                {place.rating.toFixed(1)} ({place.reviewCount} reviews)
-              </span>
+              {place.rating ? (
+                <span className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-black/70 backdrop-blur-md text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                  <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  {place.rating.toFixed(1)} {place.reviewCount ? `(${place.reviewCount} reviews)` : ""}
+                </span>
+              ) : (
+                <span className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-black/70 backdrop-blur-md text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                  ⭐ Rating unavailable
+                </span>
+              )}
               <span className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-black/70 backdrop-blur-md text-xs font-semibold text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10">
                 {place.approxBudget}
               </span>

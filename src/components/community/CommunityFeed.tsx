@@ -9,12 +9,8 @@ import {
   AlertTriangle,
   Send,
   Flag,
-  Sparkles,
   CheckCircle,
   HelpCircle,
-  Clock,
-  CornerDownRight,
-  Filter,
 } from "lucide-react";
 import { GlassCard, Button, Badge } from "@/components/ui/GlassCard";
 
@@ -72,29 +68,41 @@ export function CommunityFeed() {
     { id: "stays", label: "Stays & Hostels" },
   ];
 
-  // Fetch messages
-  const fetchMessages = async (channel: string) => {
-    try {
-      setIsLoading(true);
-      const res = await fetch(`/api/community/messages?channel=${channel}`);
-      const data = await res.json();
-      if (data.success) {
-        setMessages(data.messages);
-      }
-    } catch (err) {
-      console.error("Failed to load messages", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchMessages(activeChannel);
+    let ignore = false;
+
+    fetch(`/api/community/messages?channel=${activeChannel}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!ignore && data.success) {
+          setMessages(data.messages);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load messages", error);
+      })
+      .finally(() => {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      });
+
     // Polling every 12 seconds for live updates
     const timer = setInterval(() => {
-      fetchMessages(activeChannel);
+      fetch(`/api/community/messages?channel=${activeChannel}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!ignore && data.success) {
+            setMessages(data.messages);
+          }
+        })
+        .catch(() => {});
     }, 12000);
-    return () => clearInterval(timer);
+
+    return () => {
+      ignore = true;
+      clearInterval(timer);
+    };
   }, [activeChannel]);
 
   // Handle Post Message with Moderation
@@ -145,7 +153,7 @@ export function CommunityFeed() {
       setInputContent("");
       // Add immediately to top of state
       setMessages([data.message, ...messages]);
-    } catch (err) {
+    } catch {
       setModerationAlert({
         type: "error",
         message: "Network error submitting message.",
@@ -290,7 +298,10 @@ export function CommunityFeed() {
         {channels.map((ch) => (
           <button
             key={ch.id}
-            onClick={() => setActiveChannel(ch.id)}
+            onClick={() => {
+              setActiveChannel(ch.id);
+              setIsLoading(true);
+            }}
             className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
               activeChannel === ch.id
                 ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-600 shadow-md"

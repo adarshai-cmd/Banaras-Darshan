@@ -76,10 +76,16 @@ export default async function PlaceDetailPage({ params }: PageProps) {
         {/* Bottom Hero Info */}
         <div className="absolute bottom-6 left-6 right-6 z-10 space-y-2">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs font-semibold text-amber-400 border border-amber-500/30 flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              {place.rating.toFixed(1)} ({place.reviewCount} reviews)
-            </span>
+            {place.rating ? (
+              <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs font-semibold text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                {place.rating.toFixed(1)} {place.reviewCount ? `(${place.reviewCount} reviews)` : ""}
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs font-semibold text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                ⭐ Rating unavailable
+              </span>
+            )}
             <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs font-semibold text-white border border-white/10">
               {place.approxBudget}
             </span>

@@ -54,7 +54,7 @@ export default function PlanTripPage() {
           <div>
             <h4 className="font-bold text-slate-900">Export & Offline Ready</h4>
             <p className="mt-0.5 text-slate-600">
-              Print to PDF or save to your personal "My Trip" dashboard.
+              Print to PDF or save to your personal &quot;My Trip&quot; dashboard.
             </p>
           </div>
         </GlassCard>

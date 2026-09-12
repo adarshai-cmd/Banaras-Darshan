@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Sparkles, Shield, Heart, Compass, MapPin, PhoneCall } from "lucide-react";
+import { Sparkles, Shield, Heart, Compass, MapPin } from "lucide-react";
 
 export function Footer() {
   return (

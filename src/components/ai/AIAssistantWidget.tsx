@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   Sparkles,
@@ -38,7 +38,6 @@ interface Message {
 }
 
 export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: string }) {
-  const [mounted, setMounted] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -51,10 +50,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
   const [input, setInput] = useState<string>(initialPrompt);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const initialPromptSentRef = useRef<boolean>(false);
 
   const suggestedPrompts = [
     "Best breakfast under ₹150?",
@@ -72,66 +68,70 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
     scrollToBottom();
   }, [messages, isTyping]);
 
-  useEffect(() => {
-    if (initialPrompt && initialPrompt.trim()) {
-      handleSend(initialPrompt);
-    }
-  }, []);
+  const handleSend = useCallback(
+    async (questionToSend?: string) => {
+      const query = questionToSend || input;
+      if (!query.trim()) return;
 
-  const handleSend = async (questionToSend?: string) => {
-    const query = questionToSend || input;
-    if (!query.trim()) return;
+      const userMessage: Message = {
+        role: "user",
+        content: query.trim(),
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
 
-    const userMessage: Message = {
-      role: "user",
-      content: query.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
+      setMessages((prev) => [...prev, userMessage]);
+      setInput("");
+      setIsTyping(true);
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsTyping(true);
+      try {
+        const res = await fetch("/api/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: query }),
+        });
+        const data = await res.json();
 
-    try {
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: query }),
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        const assistantMessage: Message = {
-          role: "assistant",
-          content: data.reply,
-          sources: data.contextSources,
-          cards: data.relatedPlaces,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-      } else {
+        if (data.success) {
+          const assistantMessage: Message = {
+            role: "assistant",
+            content: data.reply,
+            sources: data.contextSources,
+            cards: data.relatedPlaces,
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          };
+          setMessages((prev) => [...prev, assistantMessage]);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "Sorry, I had trouble processing your query. Please try again.",
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            },
+          ]);
+        }
+      } catch {
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: "Sorry, I had trouble processing your query. Please try again.",
+            content: "Network error communicating with Banaras AI server.",
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           },
         ]);
+      } finally {
+        setIsTyping(false);
       }
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Network error communicating with Banaras AI server.",
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
-    } finally {
-      setIsTyping(false);
+    },
+    [input]
+  );
+
+  useEffect(() => {
+    if (initialPrompt && initialPrompt.trim() && !initialPromptSentRef.current) {
+      initialPromptSentRef.current = true;
+      handleSend(initialPrompt);
     }
-  };
+  }, [initialPrompt, handleSend]);
 
   return (
     <GlassCard className="flex flex-col h-[650px] overflow-hidden bg-white/95 border border-amber-500/20 shadow-xl" hoverEffect={false}>

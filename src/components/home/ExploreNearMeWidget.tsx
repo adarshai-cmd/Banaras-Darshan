@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapPin, Navigation, Compass, AlertCircle } from "lucide-react";
-import { GlassCard, Button } from "@/components/ui/GlassCard";
+import { Navigation, Compass } from "lucide-react";
+import { Button } from "@/components/ui/GlassCard";
 import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
-import { calculateHaversineDistance, formatDistance } from "@/lib/distance";
+import { calculateHaversineDistance } from "@/lib/distance";
 
 export function ExploreNearMeWidget({ initialPlaces }: { initialPlaces: PlaceCardData[] }) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -48,7 +48,7 @@ export function ExploreNearMeWidget({ initialPlaces }: { initialPlaces: PlaceCar
         const { latitude, longitude } = position.coords;
         updateDistances(latitude, longitude, "Your Current Location (GPS)");
       },
-      (error) => {
+      () => {
         setIsLocating(false);
         alert(
           "Location permission denied or unavailable. You can manually pick a starting landmark below!"

@@ -57,7 +57,32 @@ function ExploreContent() {
   };
 
   useEffect(() => {
-    fetchFilteredPlaces();
+    let ignore = false;
+    const params = new URLSearchParams();
+    if (category !== "ALL") params.append("category", category);
+    if (budgetTier !== "ALL") params.append("budget", budgetTier);
+    if (searchQuery.trim()) params.append("q", searchQuery.trim());
+    if (onlyVeg) params.append("isVeg", "true");
+    if (onlyHidden) params.append("isHidden", "true");
+
+    fetch(`/api/places?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!ignore && data.success) {
+          setPlaces(data.places);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching places:", err);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, budgetTier, onlyVeg, onlyHidden]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {

@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Navigation, MapPin, Layers, Sparkles } from "lucide-react";
 
 export interface MapMarkerData {
   id: string;
@@ -14,7 +13,7 @@ export interface MapMarkerData {
   approxBudget?: string;
   tagline?: string;
   area?: string;
-  rating?: number;
+  rating?: number | null;
 }
 
 export function LeafletMap({
@@ -22,15 +21,18 @@ export function LeafletMap({
   center = [25.3109, 83.0107], // Kashi Vishwanath / Godowlia center
   zoom = 14,
   selectedCategory = "ALL",
+  routeCoordinates,
 }: {
   places?: MapMarkerData[];
   center?: [number, number];
   zoom?: number;
   selectedCategory?: string;
+  routeCoordinates?: [number, number][];
 }) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
 
   const getMarkerColor = (category: string) => {
     switch (category) {
@@ -58,7 +60,7 @@ export function LeafletMap({
         zoomControl: false,
       });
 
-      // Add OpenStreetMap carto tile layer with clean dark/contrast mode styling
+      // Add OpenStreetMap carto tile layer with crisp voyager tiles
       L.tileLayer(
         "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
         {
@@ -69,7 +71,7 @@ export function LeafletMap({
         }
       ).addTo(map);
 
-      // Add subtle zoom control at bottom-right
+      // Add zoom control at bottom-right
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       mapInstanceRef.current = map;
@@ -77,13 +79,20 @@ export function LeafletMap({
     }
 
     return () => {
-      // Map cleanup on unmount
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Update center and zoom if changed externally
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView(center, zoom);
+    }
+  }, [center, zoom]);
 
   // Update markers when places or category filter change
   useEffect(() => {
@@ -99,7 +108,6 @@ export function LeafletMap({
     filtered.forEach((p) => {
       const color = getMarkerColor(p.category);
 
-      // Custom SVG Pin Icon
       const customIcon = L.divIcon({
         className: "custom-pin",
         html: `
@@ -112,7 +120,7 @@ export function LeafletMap({
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             border: 2px solid white;
           ">
             <span style="transform: rotate(45deg); font-size: 14px; color: white;">
@@ -148,8 +156,8 @@ export function LeafletMap({
           </p>
           <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; padding-top: 6px; border-top: 1px solid #e2e8f0;">
             <strong style="color: #0f172a;">${p.approxBudget || "Free"}</strong>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}" target="_blank" rel="noopener" style="color: #2563eb; text-decoration: none; font-weight: 600;">
-              Get Directions ↗
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}" target="_blank" rel="noopener" style="color: #2563eb; text-decoration: none; font-weight: 700;">
+              Directions ↗
             </a>
           </div>
         </div>
@@ -160,30 +168,53 @@ export function LeafletMap({
     });
   }, [places, selectedCategory]);
 
+  // Render Route Polyline if provided
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    if (routeLayerRef.current) {
+      mapInstanceRef.current.removeLayer(routeLayerRef.current);
+      routeLayerRef.current = null;
+    }
+
+    if (routeCoordinates && routeCoordinates.length > 1) {
+      const polyline = L.polyline(routeCoordinates, {
+        color: "#ea580c",
+        weight: 5,
+        opacity: 0.85,
+        dashArray: "1, 8",
+        lineJoin: "round",
+      }).addTo(mapInstanceRef.current);
+
+      routeLayerRef.current = polyline;
+      mapInstanceRef.current.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+    }
+  }, [routeCoordinates]);
+
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-white">
       <div ref={mapContainerRef} className="w-full h-full min-h-[420px]" />
       
-      {/* Map Legend Overlay */}
-      <div className="absolute top-4 left-4 z-[1000] bg-[#070d1e]/90 backdrop-blur-md p-3 rounded-xl border border-white/15 text-xs text-slate-200 shadow-xl space-y-1.5 hidden sm:block">
-        <p className="font-semibold text-white uppercase tracking-wider text-[10px] text-amber-300">
+      {/* Map Legend Overlay (Light-first high contrast) */}
+      <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-md p-3.5 rounded-xl border border-slate-200 text-xs text-slate-800 shadow-lg space-y-1.5 hidden sm:block">
+        <p className="font-bold text-slate-900 uppercase tracking-wider text-[10px]">
           Map Legend
         </p>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#ea580c]" />
-          <span>Temples & Shrines</span>
+          <span className="font-medium">Temples & Shrines</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#2563eb]" />
-          <span>Sacred Ghats</span>
+          <span className="font-medium">Sacred Ghats</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#d4af37]" />
-          <span>Local Food & Sweets</span>
+          <span className="font-medium">Local Food & Sweets</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#8b5cf6]" />
-          <span>Hotels & Stays</span>
+          <span className="font-medium">Hotels & Stays</span>
         </div>
       </div>
     </div>

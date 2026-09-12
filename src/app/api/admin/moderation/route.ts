@@ -1,7 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-export async function GET() {
+// Server-side Admin/Moderator access verification
+function verifyAdminAccess(req: NextRequest): boolean {
+  const adminKey = req.headers.get("x-admin-key") || req.nextUrl.searchParams.get("key");
+  const userRole = req.headers.get("x-user-role");
+
+  const validKey = process.env.ADMIN_SECRET || "kashi_admin_2026";
+
+  if (adminKey && adminKey === validKey) {
+    return true;
+  }
+
+  if (userRole === "ADMIN" || userRole === "MODERATOR") {
+    return true;
+  }
+
+  return false;
+}
+
+export async function GET(req: NextRequest) {
+  if (!verifyAdminAccess(req)) {
+    return NextResponse.json(
+      { error: "Unauthorized. Valid Admin or Moderator credentials required." },
+      { status: 403 }
+    );
+  }
+
   try {
     const [
       totalUsers,
@@ -66,6 +91,13 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!verifyAdminAccess(req)) {
+    return NextResponse.json(
+      { error: "Unauthorized. Valid Admin or Moderator credentials required." },
+      { status: 403 }
+    );
+  }
+
   try {
     const { action, targetId, note } = await req.json();
 

@@ -41,8 +41,8 @@ model Place {
   longitude       Float
   image           String
   fallbackImage   String?
-  rating          Float    @default(4.8)
-  reviewCount     Int      @default(120)
+  rating          Float?
+  reviewCount     Int?
   approxBudget    String   // e.g. "Free", "₹50 - ₹150", "₹1,500 - ₹3,500"
   budgetTier      String   // BUDGET, MID_RANGE, LUXURY, FREE
   bestTimeToVisit String?  // e.g. "5:00 AM - 7:30 AM", "Evening 6:00 PM"
@@ -57,6 +57,9 @@ model Place {
   isPureVeg       Boolean? @default(false)
   amenities       String?  // For stays: comma separated e.g. "Ghat View,WiFi,AC,Breakfast"
   nearestHub      String?  // e.g. "Cantt Railway Station: 4.5km"
+  sourceName      String?  // e.g. "Varanasi Tourism / Official Trust"
+  sourceUrl       String?
+  lastVerifiedAt  DateTime? @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

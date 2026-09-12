@@ -1,10 +1,20 @@
 /**
- * Distance, Geolocation, and Transit Routing Utilities for Banaras Darshan
+ * Distance, Geolocation, and Real Transit Routing Utilities for Banaras Darshan
  */
 
 export interface Coordinates {
   lat: number;
   lng: number;
+}
+
+export interface RouteResult {
+  distanceKm: number;
+  durationMinutes: number;
+  text: string;
+  approxFare: string;
+  isRealRoadNetwork: boolean;
+  coordinates: [number, number][]; // [lat, lng] array for Leaflet polyline
+  routeNotice?: string;
 }
 
 export const VARANASI_HUBS: Record<string, { name: string; desc: string; lat: number; lng: number }> = {
@@ -79,11 +89,105 @@ export function formatDistance(distanceKm: number): string {
   return `${distanceKm.toFixed(1)} km`;
 }
 
+/**
+ * Queries OpenStreetMap Routing Machine (OSRM) for real road-network navigation
+ * with graceful fallback to Haversine with Varanasi traffic buffers.
+ */
+export async function fetchOSRMRoute(
+  start: Coordinates,
+  end: Coordinates,
+  mode: "AUTO" | "CAR" | "WALKING" | "BOAT"
+): Promise<RouteResult> {
+  // If boat mode, calculate along river curve
+  if (mode === "BOAT") {
+    const straightDist = calculateHaversineDistance(start, end);
+    const distanceKm = straightDist * 1.15; // river bend factor
+    const minutes = Math.max(15, Math.round((distanceKm / 8.0) * 60));
+    return {
+      distanceKm: parseFloat(distanceKm.toFixed(1)),
+      durationMinutes: minutes,
+      text: `${minutes} min river cruise`,
+      approxFare: "₹150-300 per seat (Shared bajra)",
+      isRealRoadNetwork: false,
+      coordinates: [
+        [start.lat, start.lng],
+        [(start.lat + end.lat) / 2, (start.lng + end.lng) / 2],
+        [end.lat, end.lng],
+      ],
+      routeNotice: "Scenic river route along the Ghats. Only licensed boats recommended.",
+    };
+  }
+
+  const osrmProfile = mode === "WALKING" ? "walking" : "driving";
+  const url = `https://router.project-osrm.org/route/v1/${osrmProfile}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const distKm = parseFloat((route.distance / 1000).toFixed(1));
+        // Add 5-8 min Varanasi old-city lane traffic buffer for motorized vehicles
+        const buffer = mode === "WALKING" ? 0 : 7;
+        const durationMins = Math.max(
+          5,
+          Math.round(route.duration / 60 + buffer)
+        );
+
+        // Convert GeoJSON [lng, lat] to Leaflet [lat, lng]
+        const polylineCoords: [number, number][] = route.geometry.coordinates.map(
+          (c: [number, number]) => [c[1], c[0]]
+        );
+
+        let fare = "Free";
+        if (mode === "AUTO") {
+          fare = distKm < 2 ? "₹30-50" : distKm < 6 ? "₹60-120" : "₹150-250";
+        } else if (mode === "CAR") {
+          fare = distKm > 15 ? "₹850-1,100 (Airport cab)" : "₹250-450";
+        }
+
+        return {
+          distanceKm: distKm,
+          durationMinutes: durationMins,
+          text: `${durationMins} min via ${mode === "AUTO" ? "Auto / E-Rickshaw" : mode === "CAR" ? "Cab / Taxi" : "Walking"}`,
+          approxFare: fare,
+          isRealRoadNetwork: true,
+          coordinates: polylineCoords,
+          routeNotice: "Route calculated via real OpenStreetMap road network.",
+        };
+      }
+    }
+  } catch {
+    // Network or timeout failure - graceful fallback to Haversine
+  }
+
+  // Graceful deterministic fallback
+  const fallbackDist = calculateHaversineDistance(start, end) * 1.35; // City road detour coefficient
+  const fallback = estimateTravelTime(fallbackDist, mode);
+  return {
+    distanceKm: parseFloat(fallbackDist.toFixed(1)),
+    durationMinutes: fallback.minutes,
+    text: fallback.text,
+    approxFare: fallback.approxFare,
+    isRealRoadNetwork: false,
+    coordinates: [
+      [start.lat, start.lng],
+      [end.lat, end.lng],
+    ],
+    routeNotice: "Approximate road distance based on local lane traffic patterns.",
+  };
+}
+
 export function estimateTravelTime(
   distanceKm: number,
   mode: "WALKING" | "AUTO" | "CAR" | "BOAT"
 ): { minutes: number; text: string; approxFare: string } {
-  // Factoring Varanasi old city lane conditions and traffic
   switch (mode) {
     case "WALKING": {
       const minutes = Math.max(3, Math.round((distanceKm / 4.0) * 60));
@@ -94,8 +198,7 @@ export function estimateTravelTime(
       };
     }
     case "AUTO": {
-      // E-rickshaw / Auto: avg 15-18 km/h + 5 min traffic buffer
-      const minutes = Math.max(7, Math.round((distanceKm / 18) * 60 + 5));
+      const minutes = Math.max(7, Math.round((distanceKm / 18) * 60 + 6));
       const fare = distanceKm < 2 ? "₹30-50" : distanceKm < 6 ? "₹60-120" : "₹150-250";
       return {
         minutes,
@@ -104,9 +207,8 @@ export function estimateTravelTime(
       };
     }
     case "CAR": {
-      // Cab / Taxi
       const minutes = Math.max(10, Math.round((distanceKm / 20) * 60 + 8));
-      const fare = distanceKm > 15 ? "₹800-1100 (Airport cab)" : "₹250-450";
+      const fare = distanceKm > 15 ? "₹850-1,100 (Airport cab)" : "₹250-450";
       return {
         minutes,
         text: `${minutes} min via Cab / Taxi`,
@@ -114,7 +216,6 @@ export function estimateTravelTime(
       };
     }
     case "BOAT": {
-      // Traditional wooden hand boat or bajra on the Ganga
       const minutes = Math.max(15, Math.round((distanceKm / 8) * 60));
       return {
         minutes,

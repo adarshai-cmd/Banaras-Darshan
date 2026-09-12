@@ -544,7 +544,7 @@ async function main() {
       area: "Chowk / Vishwanath Corridor",
       latitude: 25.3116,
       longitude: 83.0102,
-      image: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80",
+      image: "https://images.unsplash.com/photo-1598091383021-15ddea10925d?auto=format&fit=crop&w=1200&q=80",
       rating: 4.8,
       reviewCount: 2900,
       approxBudget: "Free to explore | Souvenirs: ₹100 - ₹1,500",
@@ -558,6 +558,8 @@ async function main() {
       isHiddenGem: false,
       tags: "Ancient Lanes,Shopping,Rudraksha,Attar,Heritage Walk",
       nearestHub: "Godowlia: 200m | Kashi Vishwanath Gate 1: 50m",
+      sourceName: "Varanasi Smart City Heritage Cell",
+      sourceUrl: "https://kashivishwanath.in",
     },
     {
       slug: "sarai-mohana-weaver-colony",
@@ -586,6 +588,8 @@ async function main() {
       isHiddenGem: true,
       tags: "Banarasi Silk,Handloom,Zari,Artisans,GI Tag,Offbeat",
       nearestHub: "Kashi Railway Station: 2.2 km | Rajghat: 1.5 km",
+      sourceName: "Varanasi Handloom Weavers Guild (GI Registry)",
+      sourceUrl: "https://handlooms.nic.in",
     },
     {
       slug: "lolark-kund",
@@ -600,7 +604,7 @@ async function main() {
       area: "Shivala / Tulsi Ghat",
       latitude: 25.2925,
       longitude: 83.0071,
-      image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80",
+      image: "https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1200&q=80",
       rating: 4.7,
       reviewCount: 540,
       approxBudget: "Free",
@@ -614,6 +618,7 @@ async function main() {
       isHiddenGem: true,
       tags: "Stepwell,Sun God,Ancient,Heritage Architecture,Quiet",
       nearestHub: "Tulsi Ghat: 150m | Assi Ghat: 600m",
+      sourceName: "Archaeological Survey & Kashi Khanda Registry",
     },
   ];
 
