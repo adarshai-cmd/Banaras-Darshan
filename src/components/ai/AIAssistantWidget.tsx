@@ -8,13 +8,11 @@ import {
   Bot,
   User,
   CheckCircle2,
-  MapPin,
   Star,
-  ExternalLink,
   RotateCcw,
-  Compass,
+  Languages,
 } from "lucide-react";
-import { GlassCard, Button, Badge } from "@/components/ui/GlassCard";
+import { GlassCard, Button } from "@/components/ui/GlassCard";
 import { SafeImage } from "@/components/ui/SafeImage";
 
 interface ChatCard {
@@ -24,7 +22,7 @@ interface ChatCard {
   category: string;
   area: string;
   approxBudget: string;
-  rating: number;
+  rating?: number | null;
   image: string;
   tagline: string;
 }
@@ -38,12 +36,13 @@ interface Message {
 }
 
 export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: string }) {
+  const [selectedLang, setSelectedLang] = useState<"auto" | "hi" | "en" | "bilingual">("auto");
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
       content:
-        "Namaste! I am **Banaras AI**, your local digital travel guide. I am grounded in 100% verified Kashi data. How may I assist your pilgrimage or exploration today?",
-      sources: ["Banaras Darshan Verified Heritage & Places Directory"],
+        "हर हर महादेव! 🙏 Namaste! I am **Banaras AI (बनारस एआई)**, your local digital travel guide powered by Google Gemini.\n\nआप मुझसे **हिंदी (हिन्दी)**, **English**, या **Hinglish** में कुछ भी पूछ सकते हैं — जैसे मंदिर दर्शन समय, घाट आरती, नाव का किराया और बनारसी खान-पान!",
+      sources: ["Google Gemini Multilingual Engine", "Banaras Darshan 100% Verified Heritage Directory"],
       timestamp: "10:30 AM",
     },
   ]);
@@ -53,11 +52,12 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
   const initialPromptSentRef = useRef<boolean>(false);
 
   const suggestedPrompts = [
-    "Best breakfast under ₹150?",
-    "Which ghat should I visit at sunset?",
-    "Best budget hotel near Kashi Vishwanath?",
-    "I have 2 days and ₹3000. Plan my trip.",
-    "Tell me about Kaal Bhairav temple",
+    "काशी विश्वनाथ मंगला आरती का समय?",
+    "Best breakfast under ₹150 (कचौड़ी-जलेबी)?",
+    "अस्सी घाट से दशाश्वमेध नाव का सही किराया?",
+    "Which ghat is best for sunset boat ride?",
+    "काल भैरव मंदिर दर्शन के नियम?",
+    "2 Days budget itinerary (₹3000)?",
   ];
 
   const scrollToBottom = () => {
@@ -87,7 +87,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
         const res = await fetch("/api/ai/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: query }),
+          body: JSON.stringify({ question: query, language: selectedLang }),
         });
         const data = await res.json();
 
@@ -123,7 +123,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
         setIsTyping(false);
       }
     },
-    [input]
+    [input, selectedLang]
   );
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 font-serif">
               <span>Banaras AI Guide</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-sans font-semibold">
-                Verified Engine
+                Gemini Multilingual
               </span>
             </h3>
             <p className="text-[11px] text-slate-600">
@@ -159,7 +159,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             setMessages([
               {
                 role: "assistant",
-                content: "Namaste! Chat reset. How may I guide you through Kashi?",
+                content: "हर हर महादेव! 🙏 Namaste! Conversation reset. How may I guide your journey through Kashi?",
                 timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
               },
             ])
@@ -169,6 +169,35 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
         >
           <RotateCcw className="w-4 h-4" />
         </button>
+      </div>
+
+      {/* Language Selector Ribbon */}
+      <div className="px-4 py-2 bg-[#FAF7F0] border-b border-amber-500/15 flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-1.5 text-slate-700 font-semibold text-[11px] shrink-0">
+          <Languages className="w-3.5 h-3.5 text-amber-700" />
+          <span>भाषा / Language:</span>
+        </div>
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+          {[
+            { id: "auto", label: "🌐 Auto (स्वतः)" },
+            { id: "hi", label: "🇮🇳 हिन्दी" },
+            { id: "en", label: "🇬🇧 English" },
+            { id: "bilingual", label: "✨ Hinglish" },
+          ].map((lang) => (
+            <button
+              key={lang.id}
+              type="button"
+              onClick={() => setSelectedLang(lang.id as "auto" | "hi" | "en" | "bilingual")}
+              className={`px-2.5 py-0.5 rounded-lg text-[11px] transition-all cursor-pointer whitespace-nowrap ${
+                selectedLang === lang.id
+                  ? "bg-amber-600 text-white font-bold shadow-sm"
+                  : "bg-white text-slate-700 hover:bg-amber-50 hover:text-amber-900 border border-amber-500/20"
+              }`}
+            >
+              {lang.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Messages Scroll Area */}
@@ -227,7 +256,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
                           <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
                             <span className="flex items-center gap-0.5 text-amber-700 font-semibold">
                               <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                              {card.rating.toFixed(1)}
+                              {card.rating ? card.rating.toFixed(1) : "—"}
                             </span>
                             <span>•</span>
                             <span className="truncate">{card.area}</span>
@@ -300,7 +329,13 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about temples, food under ₹150, sunset ghats, safety..."
+            placeholder={
+              selectedLang === "hi"
+                ? "काशी दर्शन, मंगला आरती समय, कचौड़ी, नाव का किराया पूछें..."
+                : selectedLang === "bilingual"
+                ? "Ask in Hindi or English (e.g. Kaal Bhairav rules, ₹150 breakfast)..."
+                : "Ask about temples, food under ₹150, sunset ghats, boat fares..."
+            }
             className="flex-1 rounded-xl px-4 py-2.5 text-sm bg-[#FAF8F5] border border-amber-500/30 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
           />
           <Button

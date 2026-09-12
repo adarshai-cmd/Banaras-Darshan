@@ -3,7 +3,7 @@ import { askBanarasAI } from "@/lib/ai-engine";
 
 export async function POST(req: NextRequest) {
   try {
-    const { question } = await req.json();
+    const { question, language } = await req.json();
 
     if (!question || typeof question !== "string") {
       return NextResponse.json(
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const answer = await askBanarasAI(question);
+    const answer = await askBanarasAI(question, language);
     return NextResponse.json({ success: true, ...answer });
   } catch (error) {
     console.error("Error in Banaras AI endpoint:", error);
