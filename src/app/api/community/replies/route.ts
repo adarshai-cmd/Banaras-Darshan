@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { evaluateMessageContent } from "@/lib/moderation";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: "Please sign in to reply." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
-    const { messageId, content, userName = "Fellow Traveler" } = body;
+    const { messageId, content } = body;
 
     if (!messageId || !content) {
       return NextResponse.json(
@@ -29,9 +38,9 @@ export async function POST(req: NextRequest) {
     const reply = await prisma.communityReply.create({
       data: {
         messageId,
-        userId: "usr_reply_" + Math.random().toString(36).substring(2, 8),
-        userName: userName.trim() || "Kashi Traveler",
-        userBadge: "Helpful Traveler",
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userBadge: currentUser.badge,
         content: content.trim(),
         status: moderation.action === "HOLD_FOR_REVIEW" ? "HELD_FOR_REVIEW" : "APPROVED",
       },

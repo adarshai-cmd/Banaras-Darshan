@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin/api/", "/api/admin/"],
+      disallow: ["/bd-admin/", "/api/bd-admin/", "/admin/", "/api/admin/"],
     },
     sitemap: "https://banarasdarshan.com/sitemap.xml",
   };

@@ -1,28 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-
-// Server-side Admin/Moderator access verification
-function verifyAdminAccess(req: NextRequest): boolean {
-  const adminKey = req.headers.get("x-admin-key") || req.nextUrl.searchParams.get("key");
-  const userRole = req.headers.get("x-user-role");
-
-  const validKey = process.env.ADMIN_SECRET || "kashi_admin_2026";
-
-  if (adminKey && adminKey === validKey) {
-    return true;
-  }
-
-  if (userRole === "ADMIN" || userRole === "MODERATOR") {
-    return true;
-  }
-
-  return false;
-}
+import { requireAdminOrModerator } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
-  if (!verifyAdminAccess(req)) {
+  const user = await requireAdminOrModerator();
+  if (!user) {
     return NextResponse.json(
-      { error: "Unauthorized. Valid Admin or Moderator credentials required." },
+      { error: "Forbidden. Admin or Moderator session required." },
       { status: 403 }
     );
   }
@@ -58,11 +42,11 @@ export async function GET(req: NextRequest) {
       prisma.placeSuggestion.findMany({
         where: { status: "PENDING" },
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 25,
       }),
       prisma.feedback.findMany({
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 25,
       }),
     ]);
 
@@ -74,6 +58,7 @@ export async function GET(req: NextRequest) {
         totalMessages,
         pendingReportsCount: pendingReports.length,
         heldMessagesCount: heldMessages.length,
+        pendingSuggestionsCount: placeSuggestions.length,
       },
       pendingReports,
       heldMessages,
@@ -91,9 +76,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!verifyAdminAccess(req)) {
+  const user = await requireAdminOrModerator();
+  if (!user) {
     return NextResponse.json(
-      { error: "Unauthorized. Valid Admin or Moderator credentials required." },
+      { error: "Forbidden. Admin or Moderator session required." },
       { status: 403 }
     );
   }
@@ -146,11 +132,63 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "APPROVE_SUGGESTION") {
+      const suggestion = await prisma.placeSuggestion.findUnique({
+        where: { id: targetId },
+      });
+
+      if (!suggestion) {
+        return NextResponse.json({ error: "Suggestion not found" }, { status: 404 });
+      }
+
       await prisma.placeSuggestion.update({
         where: { id: targetId },
-        data: { status: "APPROVED" },
+        data: { status: "VERIFIED" },
       });
-      return NextResponse.json({ success: true, message: "Suggestion approved" });
+
+      // Generate unique slug
+      const baseSlug = suggestion.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
+      const slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+
+      // Publish as verified place
+      await prisma.place.create({
+        data: {
+          slug,
+          name: suggestion.name,
+          category: suggestion.category || "HIDDEN",
+          subCategory: "Community Verified Discovery",
+          tagline: suggestion.speciality || "Discovered by the Banaras community.",
+          description: suggestion.description,
+          address: suggestion.address,
+          area: suggestion.address.split(",")[0] || "Varanasi",
+          latitude: suggestion.latitude || 25.3109,
+          longitude: suggestion.longitude || 83.0107,
+          image:
+            suggestion.photoUrl ||
+            "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1200&q=80",
+          approxBudget: "Price varies — check current price",
+          budgetTier: "BUDGET",
+          isVerified: true,
+          isHiddenGem: true,
+          tags: "Community Recommendation,Verified",
+          sourceName: suggestion.sourceRef || `Submitted by ${suggestion.submittedBy || "Community Explorer"}`,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Suggestion approved and published as official verified place (${slug})!`,
+      });
+    }
+
+    if (action === "REJECT_SUGGESTION") {
+      await prisma.placeSuggestion.update({
+        where: { id: targetId },
+        data: { status: "REJECTED" },
+      });
+      return NextResponse.json({ success: true, message: "Place suggestion rejected" });
     }
 
     return NextResponse.json({ error: "Unrecognized moderation action" }, { status: 400 });

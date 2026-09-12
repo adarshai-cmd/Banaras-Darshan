@@ -145,12 +145,7 @@ export async function fetchOSRMRoute(
           (c: [number, number]) => [c[1], c[0]]
         );
 
-        let fare = "Free";
-        if (mode === "AUTO") {
-          fare = distKm < 2 ? "₹30-50" : distKm < 6 ? "₹60-120" : "₹150-250";
-        } else if (mode === "CAR") {
-          fare = distKm > 15 ? "₹850-1,100 (Airport cab)" : "₹250-450";
-        }
+        let fare = mode === "WALKING" ? "Free (Walking)" : "Fare unavailable";
 
         return {
           distanceKm: distKm,
@@ -199,20 +194,18 @@ export function estimateTravelTime(
     }
     case "AUTO": {
       const minutes = Math.max(7, Math.round((distanceKm / 18) * 60 + 6));
-      const fare = distanceKm < 2 ? "₹30-50" : distanceKm < 6 ? "₹60-120" : "₹150-250";
       return {
         minutes,
         text: `${minutes} min via Auto / E-Rickshaw`,
-        approxFare: fare,
+        approxFare: "Fare unavailable",
       };
     }
     case "CAR": {
       const minutes = Math.max(10, Math.round((distanceKm / 20) * 60 + 8));
-      const fare = distanceKm > 15 ? "₹850-1,100 (Airport cab)" : "₹250-450";
       return {
         minutes,
         text: `${minutes} min via Cab / Taxi`,
-        approxFare: fare,
+        approxFare: "Fare unavailable",
       };
     }
     case "BOAT": {
@@ -220,7 +213,7 @@ export function estimateTravelTime(
       return {
         minutes,
         text: `${minutes} min river cruise`,
-        approxFare: "₹150-300 per seat",
+        approxFare: "Shared boat fares vary locally",
       };
     }
   }

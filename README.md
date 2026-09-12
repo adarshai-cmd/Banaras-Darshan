@@ -8,7 +8,7 @@
 [![Prisma](https://img.shields.io/badge/Prisma-6.19-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-amber.svg?style=for-the-badge)](LICENSE)
 
-> **The all-in-one digital travel companion, route navigator, real-time community, and AI guide for Varanasi (Banaras / Kashi).**
+> **The all-in-one digital travel companion, route navigator, real-time community, live weather radar, and AI guide for Varanasi (Banaras / Kashi).**
 >
 > 🔗 **Repository**: [https://github.com/adarshai-cmd/Banaras-Darshan](https://github.com/adarshai-cmd/Banaras-Darshan)
 
@@ -20,11 +20,13 @@
 
 Combining cutting-edge web engineering with deep respect for Varanasi's timeless spiritual heritage, it delivers an integrated experience blending:
 * **Interactive Mapping & Transit Navigation** (Station-to-ghat realistic routing, fare benchmarks & walking advice)
+* **Live Map Weather Radar & 5-Day Forecast** (Real-time meteorological metrics, floating map overlay, and travel guidance)
+* **Dynamic Promotions & Cultural Highlights** (Hero auto-rotating promotional slots, mobile touch carousel, and interactive details)
 * **Real-time Traveler Community & Live Dispatches** (Real-time traveler advice, channel discussions, verified contributor badges)
 * **Verified Information Engine** (Automated checks verifying community recommendations against official place records)
 * **Smart AI Trip Planner** (Personalized multi-day day-by-day itineraries factoring budget, pace, and zero-backtracking paths)
 * **Live Spiritual Clock** (Ganga Aarti schedules for Dashashwamedh and Assi Ghat, sunrise/sunset timings, river conditions)
-* **Multi-stage Moderation System** (Proactive safety filters preventing scams, abusive language, and unsafe river advisories)
+* **Hidden Enterprise Admin Panel (`/bd-admin`)** (Zero public traces, scrypt constant-time authentication, brute-force rate limiter, full directory CRUD, photo uploads, moderation queue, and chatbot directives)
 
 ---
 
@@ -42,14 +44,18 @@ Combining cutting-edge web engineering with deep respect for Varanasi's timeless
 
 ## 🌟 Key Features
 
-### 1. 🌅 Cinematic Hero & Global Search
+### 1. 🌅 Cinematic Hero with Dynamic Promotions & Global Search
 - Immersive high-definition visuals of Dashashwamedh Ghat and evening Maha Aarti.
+- **Flanking Promotional Slots**: Left and Right promotional cards flanking the search area on desktop with auto-rotation (4.5s), hover pause, and pagination dots.
+- **Mobile Touch Carousel**: Swipeable touch carousel with gesture detection (`onTouchStart/Move/End`) on smaller viewports.
+- **Interactive Promotion Detail Modal**: High-res imagery, Google Maps directions link, direct phone dialer, booking links, and impression/click analytics tracking.
 - Smart search bar supporting instant lookup across temples, ghats, food spots, stays, and hidden lanes.
-- Quick prompt chips for common queries (*“Best breakfast under ₹150?”*, *“Which ghat for sunrise boat ride?”*).
 
-### 2. 🪔 Live Dispatch — "Today in Banaras"
-- Real-time countdown to daily Ganga Aarti (Dashashwamedh Ghat 6:30 PM, Subah-e-Banaras Assi Ghat 5:00 AM).
-- Live Varanasi temperature, humidity, sunrise & sunset timings, and river navigation alerts.
+### 2. ☀️ Banaras Live Weather & 5-Day Forecast
+- **Floating Map Weather Radar**: Integrated directly into OpenStreetMap (`LeafletMap.tsx`) at the top-right corner. Shows a compact glassmorphic pill that expands into a rich radar drawer with humidity, wind speed, sunset timing, smart travel advice, 5-day mini forecast, and °C / °F toggle.
+- **Dedicated Weather Section**: Embedded on the Homepage and `/map` page with live temperature, "feels like", WMO condition translation, and precipitation probability.
+- **Route Planner Weather Context**: Real-time weather and rain alert banner directly inside the station-to-ghat route calculator.
+- **15-Minute Server Cache & Offline Fallback**: Zero external API keys exposed to visitors, powered by Open-Meteo with high-performance in-memory caching and graceful fallback.
 
 ### 3. 🗺️ Interactive Leaflet Map & Station Route Navigator
 - Integrated OpenStreetMap & Leaflet mapping with category-coded pins (Temples, Ghats, Food, Stays, Hidden Gems).
@@ -89,9 +95,17 @@ Combining cutting-edge web engineering with deep respect for Varanasi's timeless
 - Renders interactive destination cards directly inside chat responses.
 - Provider-agnostic engine with seamless integration for Gemini and OpenAI models.
 
-### 9. ⚙️ Admin Moderation Dashboard (`/admin`)
-- Live KPI monitoring: total registered places, active dispatches, held messages, and pending user reports.
-- One-click Approve / Reject action queue for community posts and crowdsourced place submissions.
+### 9. 🔐 Hidden Enterprise Admin Panel (`/bd-admin`)
+- **Strict Secrecy**: Accessible ONLY by navigating manually to `/bd-admin`. Decommissioned old `/admin` returns HTTP 404. Zero public links or mentions in navbar, footer, sitemap, or robots.
+- **Cryptographic Security**: Node.js `crypto.scryptSync` salted hashing, constant-time `crypto.timingSafeEqual` password verification, HTTP-only secure session cookies, and 15-minute brute-force lockout after 5 failed attempts.
+- **Comprehensive CMS Sections**:
+  - **Directory Manager**: Temples, Ghats, Food, Tourist Places with rich metadata, photos, aarti times, and pricing.
+  - **Promotions & Ads**: Full CRUD, image uploads, start/end scheduling, priority weighting, and impressions/clicks CTR analytics.
+  - **Weather Settings**: Coordinates configuration, cache duration tuning, and custom travel advisory overrides.
+  - **Infrastructure**: Parking Stands Manager and Nearby Places Cross-Linking.
+  - **Media Storage**: Upload images directly to server storage (`public/uploads/`) with instant preview.
+  - **Moderation Desk**: 1-Click "Approve & Publish" for user-submitted places and report resolution.
+  - **AI Directives & Content**: Configure chatbot system prompts, announcement banners, and emergency helplines.
 
 ---
 
@@ -105,7 +119,9 @@ Combining cutting-edge web engineering with deep respect for Varanasi's timeless
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Theme variables, utility-first CSS |
 | **Database** | SQLite (Default local) / PostgreSQL ready | Seamless portability across environments |
 | **ORM** | [Prisma ORM 6](https://www.prisma.io/) | Type-safe queries, automated migrations & seeders |
+| **Weather** | [Open-Meteo](https://open-meteo.com/) | Zero-key live weather & 5-day forecast with server caching |
 | **Maps** | [Leaflet](https://leafletjs.com/) + OpenStreetMap | Zero-cost, 100% API-key-free interactive mapping |
+| **Routing** | [OSRM](https://project-osrm.org/) | Realistic road network navigation & distance calculations |
 | **Icons** | [Lucide React](https://lucide.dev/) | Clean, lightweight icon suite |
 | **Animations** | [Framer Motion](https://www.framer.com/motion/) | Smooth entrance animations and page transitions |
 
@@ -116,13 +132,14 @@ Combining cutting-edge web engineering with deep respect for Varanasi's timeless
 ```
 Banaras-Darshan/
 ├── prisma/
-│   ├── schema.prisma          # Database schema (Places, Users, Messages, Reports, Trips)
+│   ├── schema.prisma          # Database schema (Places, Users, Messages, Reports, Promotions)
 │   └── seed.ts                # Verified authentic Banaras seed dataset (19+ places, channels)
-├── public/                    # Static assets & icons
+├── public/                    # Static assets, icons & uploaded photos
+│   └── uploads/               # Direct admin file upload storage
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx         # Root layout with SEO metadata, Navbar & Footer
-│   │   ├── page.tsx           # Cinematic landing page
+│   │   ├── page.tsx           # Cinematic landing page with Hero Promos & Weather
 │   │   ├── globals.css        # Tailwind v4 theme, glassmorphism tokens & scrollbars
 │   │   ├── explore/           # Search catalog with category & tag filters
 │   │   ├── temples/           # Dedicated Temples & Aarti rituals guide
@@ -130,35 +147,43 @@ Banaras-Darshan/
 │   │   ├── food/              # Iconic Banarasi street food guide
 │   │   ├── stay/              # Verified heritage stays, hotels & hostels
 │   │   ├── hidden/            # Hidden lanes, silk weavers & stepwells
-│   │   ├── map/               # Leaflet map & station-to-ghat transit planner
+│   │   ├── map/               # Leaflet map with Live Weather overlay & Route Planner
 │   │   ├── plan/              # Multi-day AI itinerary builder
 │   │   ├── community/         # Real-time traveler community feed & chat
 │   │   ├── ai-assistant/      # Fullscreen Banaras AI conversational guide
 │   │   ├── safety/            # Safety hub, official helplines & scams guide
 │   │   ├── feedback/          # User feedback & "Suggest a Place" submission
 │   │   ├── profile/           # User profile & saved itineraries
-│   │   ├── admin/             # Admin moderation console & analytics
+│   │   ├── bd-admin/          # Hidden Admin CMS (Auth, Dashboard, CRUD, Moderation)
 │   │   ├── places/[slug]/     # Dynamic place details page
 │   │   ├── sitemap.ts         # Dynamic SEO XML sitemap generator
-│   │   ├── robots.ts          # Search engine crawler configuration
+│   │   ├── robots.ts          # Search engine crawler configuration (disallowing /bd-admin)
 │   │   └── api/               # REST API route handlers
+│   │       ├── bd-admin/      # Protected admin endpoints (places, promotions, weather, stats)
+│   │       ├── promotions/    # Public promotions & click telemetry
+│   │       ├── weather/       # Cached live weather & 5-day forecast
+│   │       ├── places/        # Place retrieval and user submissions
+│   │       ├── community/     # Dispatches, threaded replies, helpful votes
+│   │       └── ai/chat/       # Conversational AI assistant
 │   ├── components/
 │   │   ├── ui/                # GlassCard, Button, Badge, SafeImage
 │   │   ├── navigation/        # Navbar, Footer
 │   │   ├── hero/              # CinematicHero, SearchBox
-│   │   ├── today/             # TodayInBanaras (Aarti clock & weather)
+│   │   ├── promotions/        # PromotionalSlot, MobileCarousel, DetailModal
+│   │   ├── weather/           # BanarasWeatherWidget
+│   │   ├── map/               # LeafletMap (with Weather Overlay), RoutePlannerWidget
 │   │   ├── cards/             # PlaceCard
 │   │   ├── home/              # ExploreNearMeWidget (Haversine GPS radar)
-│   │   ├── map/               # LeafletMap, RoutePlannerWidget
 │   │   ├── trip/              # TripPlannerWidget
 │   │   ├── community/         # CommunityFeed
 │   │   └── ai/                # AIAssistantWidget
 │   └── lib/
 │       ├── db.ts              # Singleton Prisma client
+│       ├── auth.ts            # Admin scrypt hashing, sessions, rate limiter & RBAC
 │       ├── moderation.ts      # Multi-tier text & safety moderation engine
 │       ├── verification.ts    # Place recommendation verification engine
 │       ├── ai-engine.ts       # Grounded Banaras reasoning engine
-│       └── distance.ts        # Haversine distance calculator
+│       └── distance.ts        # Haversine distance calculator & OSRM integration
 ├── .env.example               # Environment variables template
 ├── package.json               # Dependencies and scripts
 └── tsconfig.json              # TypeScript configuration
@@ -208,28 +233,40 @@ Open your browser and navigate to:
 
 ---
 
-## 🔌 API Endpoints Reference
+## 🔌 Key API Endpoints Reference
 
 | Endpoint | Method | Description |
 |---|---|---|
 | `/api/places` | `GET` | Fetch all verified places with category, search, and featured filters |
 | `/api/places/suggest` | `POST` | Crowdsource new place suggestions for admin review |
+| `/api/promotions` | `GET` | Retrieve active, scheduled promotions for hero placement |
+| `/api/promotions/[id]/track` | `POST` | Record impression or click analytics telemetry |
+| `/api/weather` | `GET` | Retrieve live Varanasi weather, metrics & 5-day forecast (15-min cached) |
 | `/api/community/messages` | `GET`, `POST` | Retrieve channel messages / Submit new dispatch (with moderation) |
 | `/api/community/replies` | `GET`, `POST` | Threaded discussion replies |
 | `/api/community/helpful` | `POST` | Upvote helpful messages and award reputation points |
 | `/api/community/report` | `POST` | Report a message for moderator investigation |
 | `/api/ai/chat` | `POST` | Grounded conversational AI assistant response generation |
-| `/api/admin/moderation` | `GET`, `POST` | Retrieve held queue / Approve or reject content |
-| `/api/feedback` | `POST` | Traveler feedback submissions |
+| `/api/bd-admin/auth` | `POST`, `DELETE` | Authenticate admin user / Destroy session |
+| `/api/bd-admin/stats` | `GET` | Retrieve CMS overview statistics and counts |
+| `/api/bd-admin/places` | `GET`, `POST` | Admin places list and create endpoint |
+| `/api/bd-admin/places/[id]`| `PUT`, `DELETE` | Admin place edit and delete endpoint |
+| `/api/bd-admin/promotions` | `GET`, `POST` | Admin promotions list and campaign creation |
+| `/api/bd-admin/promotions/[id]` | `PUT`, `DELETE` | Admin promotion campaign update and delete |
+| `/api/bd-admin/weather` | `GET`, `POST` | Admin weather parameters configuration |
+| `/api/bd-admin/upload` | `POST` | Direct multipart file upload to `/public/uploads` |
 
 ---
 
-## 🔒 Security & Verification
+## 🔒 Security & Verification Architecture
 
+- **Hidden Admin Secrecy**: No public links, decommissioned `/admin` returning 404, disallowed in `robots.txt`, and omitted from `sitemap.xml`.
+- **Brute-Force Rate Limiter**: 15-minute account lock after 5 consecutive failed login attempts.
+- **Cryptographic Auth**: `crypto.scryptSync` unique salted hashing with `crypto.timingSafeEqual` constant-time verification.
 - **Automated Moderation**: Filters profanity, sensitive contact information, scam triggers, and unsafe boat operation claims.
 - **SQL Injection Prevention**: Parameterized queries enforced via Prisma ORM.
 - **XSS & HTML Sanitization**: Input cleaning across all community postings and user suggestions.
-- **Zero-Crash Image Fallbacks**: Glassmorphic SVG placeholders ensure graceful handling if external CDNs are slow or unavailable.
+- **Zero-Crash Fallbacks**: Glassmorphic SVG placeholders and offline weather fallbacks ensure the site never breaks.
 
 ---
 

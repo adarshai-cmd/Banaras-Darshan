@@ -18,11 +18,23 @@ model User {
   role        String   @default("USER") // USER, ADMIN, MODERATOR
   reputation  Int      @default(10)
   badge       String   @default("New Explorer") // New Explorer, Helpful Traveler, Local Guide, Trusted Contributor, Verified Contributor
+  passwordHash String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   savedPlaces SavedPlace[]
   trips       Trip[]
+  sessions    Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Place {
@@ -59,6 +71,9 @@ model Place {
   nearestHub      String?  // e.g. "Cantt Railway Station: 4.5km"
   sourceName      String?  // e.g. "Varanasi Tourism / Official Trust"
   sourceUrl       String?
+  parkingInfo     String?  // JSON formatted nearby parking details: facilities, distance, paid/free, bike/car, directions
+  galleryJson     String?  // JSON formatted array of gallery images [{ url, caption, isFeatured, order }]
+  nearbyPlacesJson String? // JSON formatted array of nearby places [{ name, slug, category, distance, relationType }]
   lastVerifiedAt  DateTime? @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -154,24 +169,109 @@ model SavedPlace {
 }
 
 model Feedback {
-  id        String   @id @default(cuid())
-  name      String
-  email     String?
-  category  String   // GENERAL, INCORRECT_INFO, FEATURE_REQ, BUG, PRAISE
-  rating    Int      @default(5)
-  message   String
-  status    String   @default("NEW") // NEW, REVIEWED, ACTIONED
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  category    String   // BUG, SITE_PROBLEM, INCORRECT_INFO, UI_IMPROVEMENT, FEATURE_REQ, OTHER
+  rating      Int      @default(5)
+  message     String
+  screenshot  String?
+  pageUrl     String?
+  contactInfo String?
+  status      String   @default("NEW") // NEW, REVIEWED, ACTIONED
+  createdAt   DateTime @default(now())
 }
 
 model PlaceSuggestion {
   id          String   @id @default(cuid())
   name        String
-  category    String
+  category    String   // TEMPLE, GHAT, FOOD, RESTAURANT, CAFE, SWEET_SHOP, MUSEUM, HERITAGE, HIDDEN, STAY, OTHER
   address     String
   description String
   speciality  String?
   submittedBy String?
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  userId      String?
+  photoUrl    String?
+  latitude    Float?
+  longitude   Float?
+  sourceRef   String?
+  status      String   @default("PENDING") // PENDING, UNDER_REVIEW, VERIFIED, REJECTED
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
+
+model GalleryImage {
+  id          String   @id @default(cuid())
+  title       String?
+  caption     String?
+  imageUrl    String
+  category    String   @default("GENERAL") // TEMPLE, GHAT, FOOD, FESTIVAL, GENERAL
+  placeId     String?
+  placeName   String?
+  isFeatured  Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ParkingLocation {
+  id               String   @id @default(cuid())
+  name             String
+  address          String
+  area             String
+  latitude         Float
+  longitude        Float
+  capacity         String?  // e.g. "200 cars, 500 two-wheelers"
+  parkingType      String   @default("MUNICIPAL") // MULTI_LEVEL, OPEN_SURFACE, UNDERGROUND, GHAT_STAND
+  timing           String?  // e.g. "24 Hours" or "06:00 AM - 11:00 PM"
+  vehicleSupport   String   @default("BOTH") // TWO_WHEELER, FOUR_WHEELER, BOTH
+  feeStatus        String   @default("PAID") // FREE, PAID, HOURLY
+  feeRate          String?  // e.g. "₹20/hr 2-wheeler, ₹50/hr 4-wheeler"
+  image            String?
+  associatedPlaces String?  // Comma-separated place slugs or names
+  directionsNote   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g. "hero_title", "announcement_banner", "ai_system_prompt", etc.
+  value     String   // Text or JSON string
+  category  String   @default("GENERAL") // GENERAL, HERO, NOTICE, AI_BOT, EMERGENCY
+  updatedAt DateTime @updatedAt
+}
+
+model Promotion {
+  id                   String    @id @default(cuid())
+  title                String
+  shortTitle           String?
+  category             String    @default("EVENT") // EVENT, RESTAURANT, FOOD_OFFER, DISCOUNT, FESTIVAL, TEMPLE_EVENT, CULTURAL_EVENT, TRAVEL_OFFER, LOCAL_BUSINESS, OTHER
+  badgeText            String?   // e.g. "TONIGHT", "20% OFF", "DEV DEEPAWALI", "SPECIAL"
+  description          String
+  imageUrl             String
+  additionalImages     String?   // JSON array string
+  ctaText              String    @default("View Details")
+  destinationUrl       String?
+  websiteUrl           String?
+  bookingUrl           String?
+  location             String?
+  address              String?
+  contactPhone         String?
+  contactEmail         String?
+  startDate            DateTime?
+  endDate              DateTime?
+  startTime            String?
+  endTime              String?
+  placement            String    @default("BOTH") // LEFT, RIGHT, BOTH
+  priority             Int       @default(5) // 1-10
+  displayOrder         Int       @default(0)
+  isActive             Boolean   @default(true)
+  isFeatured           Boolean   @default(false)
+  autoRotationDuration Int       @default(4500) // in ms
+  impressionCount      Int       @default(0)
+  clickCount           Int       @default(0)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { GlassCard, Button } from "@/components/ui/GlassCard";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { LanguageOption } from "@/lib/ai-engine";
 
 interface ChatCard {
   id: string;
@@ -32,40 +33,58 @@ interface Message {
   content: string;
   sources?: string[];
   cards?: ChatCard[];
+  externalSearchUrl?: string;
   timestamp: string;
 }
 
+const SUPPORTED_LANGUAGES: Array<{ id: LanguageOption; label: string; name: string }> = [
+  { id: "auto", label: "🌐 Auto", name: "स्वतः पहचान" },
+  { id: "hi", label: "🇮🇳 हिन्दी", name: "Hindi" },
+  { id: "bho", label: "🌾 भोजपुरी", name: "Bhojpuri" },
+  { id: "en", label: "🇬🇧 English", name: "English" },
+  { id: "bilingual", label: "✨ Hinglish", name: "Hinglish" },
+  { id: "bn", label: "🪷 বাংলা", name: "Bengali" },
+  { id: "ta", label: "🛕 தமிழ்", name: "Tamil" },
+  { id: "te", label: "🌸 తెలుగు", name: "Telugu" },
+  { id: "gu", label: "🪁 ગુજરાતી", name: "Gujarati" },
+  { id: "mr", label: "🚩 मराठी", name: "Marathi" },
+];
+
 export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: string }) {
-  const [selectedLang, setSelectedLang] = useState<"auto" | "hi" | "en" | "bilingual">("auto");
+  const [selectedLang, setSelectedLang] = useState<LanguageOption>("auto");
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
       content:
-        "हर हर महादेव! 🙏 Namaste! I am **Banaras AI (बनारस एआई)**, your local digital travel guide powered by Google Gemini.\n\nआप मुझसे **हिंदी (हिन्दी)**, **English**, या **Hinglish** में कुछ भी पूछ सकते हैं — जैसे मंदिर दर्शन समय, घाट आरती, नाव का किराया और बनारसी खान-पान!",
-      sources: ["Google Gemini Multilingual Engine", "Banaras Darshan 100% Verified Heritage Directory"],
+        "हर हर महादेव! 🙏 Namaste! I am **Banaras AI (बनारस एआई)**, your local digital travel guide grounded in our verified database.\n\nआप मुझसे बेझिझक कुछ भी पूछ सकते हैं — जैसे:\n• **मंदिर दर्शन व लॉकर नियम**\n• **घाट आरती व नाव किराया**\n• **कहाँ पार्क करें (गाड़ी / बाइक)**\n• **बजट ट्रिप प्लान (जैसे 2 दिन में ₹3000)**\n• **प्रसिद्ध खान-पान व ठहरने के स्थान**",
+      sources: ["Google Gemini Multilingual Engine", "Banaras Darshan 100% Factually Verified Database"],
       timestamp: "10:30 AM",
     },
   ]);
   const [input, setInput] = useState<string>(initialPrompt);
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const initialPromptSentRef = useRef<boolean>(false);
 
   const suggestedPrompts = [
-    "काशी विश्वनाथ मंगला आरती का समय?",
-    "Best breakfast under ₹150 (कचौड़ी-जलेबी)?",
-    "अस्सी घाट से दशाश्वमेध नाव का सही किराया?",
-    "Which ghat is best for sunset boat ride?",
-    "काल भैरव मंदिर दर्शन के नियम?",
-    "2 Days budget itinerary (₹3000)?",
+    "Where can I park near Dashashwamedh Ghat?",
+    "Best food near Assi Ghat?",
+    "I have ₹3000 for 2 days in Banaras",
+    "Which temples are open in the morning?",
+    "Best budget stay near the ghats?",
+    "काशी विश्वनाथ दर्शन व लॉकर नियम?",
+    "भोजपुरी में बतावा, अस्सी घाट पर सुबह का मिलेला?",
   ];
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Fix: Scroll ONLY the chat container, NEVER the whole page window
+  const scrollChatToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    scrollChatToBottom();
   }, [messages, isTyping]);
 
   const handleSend = useCallback(
@@ -97,6 +116,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             content: data.reply,
             sources: data.contextSources,
             cards: data.relatedPlaces,
+            externalSearchUrl: data.externalSearchUrl,
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           };
           setMessages((prev) => [...prev, assistantMessage]);
@@ -145,7 +165,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 font-serif">
               <span>Banaras AI Guide</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-sans font-semibold">
-                Gemini Multilingual
+                Multilingual AI
               </span>
             </h3>
             <p className="text-[11px] text-slate-600">
@@ -164,44 +184,43 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
               },
             ])
           }
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-black/5 transition-colors"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-black/5 transition-colors cursor-pointer"
           title="Reset Conversation"
         >
           <RotateCcw className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Language Selector Ribbon */}
-      <div className="px-4 py-2 bg-[#FAF7F0] border-b border-amber-500/15 flex items-center justify-between gap-2 text-xs">
-        <div className="flex items-center gap-1.5 text-slate-700 font-semibold text-[11px] shrink-0">
+      {/* Expanded Multilingual Selector Ribbon */}
+      <div className="px-3 py-2 bg-[#FAF7F0] border-b border-amber-500/15 flex items-center gap-2 text-xs overflow-x-auto scrollbar-thin">
+        <div className="flex items-center gap-1 text-slate-700 font-bold text-[11px] shrink-0">
           <Languages className="w-3.5 h-3.5 text-amber-700" />
-          <span>भाषा / Language:</span>
+          <span className="hidden sm:inline">Language:</span>
         </div>
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-          {[
-            { id: "auto", label: "🌐 Auto (स्वतः)" },
-            { id: "hi", label: "🇮🇳 हिन्दी" },
-            { id: "en", label: "🇬🇧 English" },
-            { id: "bilingual", label: "✨ Hinglish" },
-          ].map((lang) => (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+          {SUPPORTED_LANGUAGES.map((lang) => (
             <button
               key={lang.id}
               type="button"
-              onClick={() => setSelectedLang(lang.id as "auto" | "hi" | "en" | "bilingual")}
-              className={`px-2.5 py-0.5 rounded-lg text-[11px] transition-all cursor-pointer whitespace-nowrap ${
+              onClick={() => setSelectedLang(lang.id)}
+              className={`px-2.5 py-1 rounded-full text-[11px] transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1 ${
                 selectedLang === lang.id
-                  ? "bg-amber-600 text-white font-bold shadow-sm"
-                  : "bg-white text-slate-700 hover:bg-amber-50 hover:text-amber-900 border border-amber-500/20"
+                  ? "bg-amber-600 text-white font-bold shadow-sm ring-2 ring-amber-400/40"
+                  : "bg-white text-slate-700 hover:bg-amber-50 hover:text-amber-900 border border-slate-200"
               }`}
+              title={lang.name}
             >
-              {lang.label}
+              <span>{lang.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[#FAF8F5]/60">
+      {/* Messages Scroll Area - ONLY THIS DIV SCROLLS */}
+      <div
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[#FAF8F5]/60 scroll-smooth"
+      >
         {messages.map((msg, index) => (
           <div
             key={index}
@@ -221,6 +240,19 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
               }`}
             >
               <div className="whitespace-pre-wrap">{msg.content}</div>
+
+              {msg.externalSearchUrl && (
+                <div className="mt-2.5">
+                  <a
+                    href={msg.externalSearchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-50 border border-sky-200 text-[11px] font-semibold text-sky-800 hover:bg-sky-100 transition-colors"
+                  >
+                    <span>Search Google for latest official / external details ↗</span>
+                  </a>
+                </div>
+              )}
 
               {/* Context Sources footer */}
               {msg.sources && msg.sources.length > 0 && (
@@ -298,8 +330,6 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             </div>
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Suggested Prompts Bar */}
@@ -330,8 +360,20 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
-              selectedLang === "hi"
+              selectedLang === "bho"
+                ? "भोजपुरी में पूछल जा सकेला: अस्सी घाट कब जाईं, कचौड़ी कहाँ नीमन मिलेला..."
+                : selectedLang === "hi"
                 ? "काशी दर्शन, मंगला आरती समय, कचौड़ी, नाव का किराया पूछें..."
+                : selectedLang === "bn"
+                ? "কাশী বিশ্বনাথ দর্শন, ঘাট আরতি বা খাবারের স্থান জিজ্ঞাসা করুন..."
+                : selectedLang === "ta"
+                ? "காசி விஸ்வநாதர் தரிசனம், படகு கட்டணம் பற்றி கேளுங்கள்..."
+                : selectedLang === "te"
+                ? "కాశీ దర్శనం, ఘాట్ ఆరతి సమయాలు, ప్రసాదం గురించి అడగండి..."
+                : selectedLang === "gu"
+                ? "કાશી વિશ્વનાથ દર્શન, ઘાટ આરતી અને ભોજન વિશે પૂછો..."
+                : selectedLang === "mr"
+                ? "काशी दर्शन, नौका भाडे, उत्तम उपाहारगृहे याबद्दल विचारा..."
                 : selectedLang === "bilingual"
                 ? "Ask in Hindi or English (e.g. Kaal Bhairav rules, ₹150 breakfast)..."
                 : "Ask about temples, food under ₹150, sunset ghats, boat fares..."
@@ -343,7 +385,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             variant="gold"
             size="md"
             disabled={isTyping || !input.trim()}
-            className="px-5 py-2.5 shadow-md"
+            className="px-5 py-2.5 shadow-md cursor-pointer"
           >
             <Send className="w-4 h-4" />
           </Button>

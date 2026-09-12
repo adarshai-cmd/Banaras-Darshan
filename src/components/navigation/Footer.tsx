@@ -120,11 +120,6 @@ export function Footer() {
                   Submit Feedback & Corrections
                 </Link>
               </li>
-              <li>
-                <Link href="/admin" className="hover:text-amber-300 transition-colors">
-                  Moderation Dashboard
-                </Link>
-              </li>
               <li className="pt-2 text-xs text-slate-500">
                 Tourist Police: <span className="text-amber-300 font-mono">0542-2508000</span>
               </li>

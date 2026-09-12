@@ -25,6 +25,7 @@ import { RoutePlannerWidget } from "@/components/map/RoutePlannerWidget";
 import { TripPlannerWidget } from "@/components/trip/TripPlannerWidget";
 import { CommunityFeed } from "@/components/community/CommunityFeed";
 import { AIAssistantWidget } from "@/components/ai/AIAssistantWidget";
+import { BanarasWeatherWidget } from "@/components/weather/BanarasWeatherWidget";
 import { Button, GlassCard, Badge } from "@/components/ui/GlassCard";
 
 // Dynamic data fetching with fallback revalidation
@@ -248,6 +249,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 8b. Dedicated Banaras Weather & Travel Forecast */}
+      <BanarasWeatherWidget />
 
       {/* 9. Plan My Trip (Custom Itinerary Generator) */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

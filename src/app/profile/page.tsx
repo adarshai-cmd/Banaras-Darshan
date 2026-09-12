@@ -1,140 +1,200 @@
 import React from "react";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { User, Bookmark, Award, CalendarCheck, MapPin, Compass, ArrowRight, Star } from "lucide-react";
+import {
+  User as UserIcon,
+  Bookmark,
+  Award,
+  CalendarCheck,
+  MapPin,
+  Compass,
+  ArrowRight,
+  Sparkles,
+  PlusCircle,
+  MessageSquare,
+  Bug,
+  Shield,
+  LogOut,
+  CheckCircle2,
+} from "lucide-react";
 import { GlassCard, Button, Badge } from "@/components/ui/GlassCard";
 import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
+import { ProfileClientSections } from "./ProfileClientSections";
 
-export const revalidate = 60;
+export const revalidate = 0; // Dynamic for real user session
 
 export default async function ProfilePage() {
-  // Fetch default traveler demo profile and saved places
-  const user = await prisma.user.findFirst({
-    where: { role: "USER" },
-    include: {
-      trips: true,
-    },
-  });
+  const currentUser = await getCurrentUser();
 
-  const featuredPlaces = await prisma.place.findMany({
-    where: { isFeatured: true },
-    take: 3,
-  });
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8">
+        <div className="text-center space-y-3">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-700 border border-amber-500/20 flex items-center justify-center mx-auto shadow-sm">
+            <UserIcon className="w-7 h-7 text-amber-600" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-950 font-serif">
+            Sign In to Banaras Darshan
+          </h1>
+          <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+            Create an account or sign in to save sacred ghats, preserve your custom itineraries, post in the community chat, and submit new local discoveries.
+          </p>
+        </div>
+
+        {/* Client Auth Box */}
+        <ProfileClientSections mode="auth" />
+
+        {/* Developer Seed Accounts Note (Clearly Separated) */}
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1.5 max-w-md mx-auto shadow-xs">
+          <div className="flex items-center gap-1.5 font-bold text-slate-800">
+            <Shield className="w-3.5 h-3.5 text-amber-700" />
+            <span>Development & Testing Accounts:</span>
+          </div>
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            • <strong>Demo Explorer:</strong> <code className="text-amber-800 bg-amber-50 px-1 py-0.5 rounded">explorer@banarasdarshan.com</code> / <code className="text-slate-700">Explorer2026!</code>
+            <br />
+            • <strong>Editorial Admin:</strong> <code className="text-amber-800 bg-amber-50 px-1 py-0.5 rounded">admin@banarasdarshan.com</code> / <code className="text-slate-700">AdminPassword2026!</code>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch real user saved places and trips
+  const [savedPlacesRecords, userTrips] = await Promise.all([
+    prisma.savedPlace.findMany({
+      where: { userId: currentUser.id },
+      include: { place: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.trip.findMany({
+      where: { userId: currentUser.id },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  const savedPlaces = savedPlacesRecords.map((sp) => sp.place);
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-10">
-      {/* Profile Header Card */}
-      <GlassCard className="p-6 sm:p-8" hoverEffect={false}>
+      {/* Real Profile Header Card */}
+      <GlassCard className="p-6 sm:p-8 bg-white border border-slate-200 shadow-md" hoverEffect={false}>
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-amber-400/50 shadow-xl bg-slate-800 shrink-0">
-            <img
-              src={user?.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&q=80"}
-              alt="User profile"
-              className="w-full h-full object-cover"
-            />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-amber-400/50 shadow-md bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold shrink-0">
+            {currentUser.avatar ? (
+              <img
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>{currentUser.name.charAt(0).toUpperCase()}</span>
+            )}
           </div>
 
           <div className="space-y-2 flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-serif">
-                  {user?.name || "Ananya Sharma"}
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-950 font-serif">
+                  {currentUser.name}
                 </h1>
                 <p className="text-xs text-amber-800 font-mono font-medium mt-0.5">
-                  {user?.email || "ananya.travels@gmail.com"}
+                  {currentUser.email}
                 </p>
               </div>
-              <Badge variant="gold" className="self-center sm:self-auto text-xs px-3 py-1">
-                🏆 {user?.badge || "Helpful Traveler"}
-              </Badge>
+
+              <div className="flex items-center gap-2 self-center sm:self-auto">
+                <Badge variant="gold" className="text-xs px-3 py-1">
+                  🏆 {currentUser.badge}
+                </Badge>
+              </div>
             </div>
 
             <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
-              {user?.bio || "Solo backpacker and cultural heritage photographer exploring the sacred river corridors and ancient street food of Kashi."}
+              {currentUser.bio || "Pilgrim & cultural explorer documenting sacred temples, river ghats, and living heritage across Varanasi."}
             </p>
 
             {/* Badges & Reputation Bar */}
-            <div className="pt-3 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs">
-              <div className="px-3 py-1 rounded-xl bg-white border border-amber-500/20 text-slate-700 shadow-sm">
+            <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs">
+              <div className="px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-semibold shadow-2xs">
                 <span className="text-amber-700 font-bold font-mono mr-1">
-                  {user?.reputation || 180}
+                  {currentUser.reputation}
                 </span>{" "}
                 Reputation Points
               </div>
-              <div className="px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 font-semibold shadow-sm">
-                ✓ 14 Verified Tips Given
+              <div className="px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold shadow-2xs">
+                ✓ Verified Pilgrim Account
               </div>
-              <div className="px-3 py-1 rounded-xl bg-sky-50 border border-sky-300 text-sky-800 font-semibold shadow-sm">
-                🧭 2 Custom Trips Saved
+              <div className="px-3 py-1 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 font-semibold shadow-2xs">
+                🧭 {savedPlaces.length} Saved Places
               </div>
             </div>
           </div>
         </div>
       </GlassCard>
 
-      {/* Saved Itinerary Showcase */}
+      {/* Interactive Action Sections: Suggest a Place + Feedback Form */}
+      <ProfileClientSections mode="dashboard" userName={currentUser.name} />
+
+      {/* Saved Places Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-slate-900 font-serif flex items-center gap-2">
-            <CalendarCheck className="w-5 h-5 text-amber-600" />
-            <span>My Saved Itineraries</span>
+        <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-950 font-serif flex items-center gap-2">
+            <Bookmark className="w-5 h-5 text-amber-600" />
+            <span>My Saved Places ({savedPlaces.length})</span>
           </h2>
-          <Link href="/plan">
-            <Button variant="gold" size="sm" className="text-xs">
-              + Generate New Itinerary
+          <Link href="/explore">
+            <Button variant="outline" size="sm" className="text-xs">
+              Explore More Places
             </Button>
           </Link>
         </div>
 
-        <GlassCard className="p-6 space-y-3 bg-white/90 border border-amber-500/20 shadow-sm" hoverEffect={false}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-black/10 pb-3">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 font-serif">
-                Classic 3-Day Heritage & Soul of Kashi
-              </h3>
-              <p className="text-xs text-slate-500">
-                Duration: 3 Days • Style: Spiritual + Food + Heritage • Group: Solo
-              </p>
-            </div>
-            <Link href="/plan">
-              <Button variant="outline" size="sm" className="text-xs">
-                View Timeline Details →
-              </Button>
+        {savedPlaces.length === 0 ? (
+          <div className="p-8 text-center rounded-2xl bg-white border border-slate-200 text-slate-600 text-xs space-y-2">
+            <p>You haven&apos;t bookmarked any sacred places yet.</p>
+            <Link href="/explore" className="text-amber-700 font-bold hover:underline">
+              Browse Temples, Ghats & Food Spots →
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-            <div className="p-3 rounded-xl bg-amber-50/50 border border-amber-500/15">
-              <p className="text-amber-800 font-bold font-serif">Day 1: Sacred Rivers</p>
-              <p className="text-slate-600 text-[11px] mt-1">Subah-e-Banaras, Ram Bhandar Kachori, Vishwanath Corridor, Evening Aarti</p>
-            </div>
-            <div className="p-3 rounded-xl bg-amber-50/50 border border-amber-500/15">
-              <p className="text-amber-800 font-bold font-serif">Day 2: Fortresses & Looms</p>
-              <p className="text-slate-600 text-[11px] mt-1">Chet Singh Fort boat, Sankat Mochan, Sarai Mohana Silk Weavers, Paan</p>
-            </div>
-            <div className="p-3 rounded-xl bg-amber-50/50 border border-amber-500/15">
-              <p className="text-amber-800 font-bold font-serif">Day 3: Hidden Subterranean</p>
-              <p className="text-slate-600 text-[11px] mt-1">Malaiyo tasting, Kaal Bhairav blessing, Vishwanath Gali, Manikarnika</p>
-            </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {savedPlaces.map((place) => (
+              <PlaceCard key={place.id} place={place as unknown as PlaceCardData} isSaved={true} />
+            ))}
           </div>
-        </GlassCard>
+        )}
       </div>
 
-      {/* Bookmarked Places */}
+      {/* Saved Custom Itineraries */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-slate-900 font-serif flex items-center gap-2">
-            <Bookmark className="w-5 h-5 text-amber-600" />
-            <span>Saved Sacred Places & Food Spots</span>
+        <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-950 font-serif flex items-center gap-2">
+            <CalendarCheck className="w-5 h-5 text-orange-600" />
+            <span>My Custom Itineraries</span>
           </h2>
-          <Link href="/explore" className="text-xs text-amber-700 hover:text-amber-800 font-bold">
-            Explore More Places →
+          <Link href="/plan">
+            <Button variant="gold" size="sm" className="text-xs">
+              + Plan New Trip
+            </Button>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredPlaces.map((place) => (
-            <PlaceCard key={place.id} place={place as unknown as PlaceCardData} isSaved={true} />
-          ))}
+        <div className="p-6 rounded-2xl bg-white border border-slate-200 space-y-2 text-xs text-slate-600 shadow-xs">
+          <div className="flex items-center justify-between">
+            <h4 className="font-bold text-slate-900 text-sm font-serif">
+              Dynamic Itinerary Planner
+            </h4>
+            <Link href="/plan">
+              <Button variant="outline" size="sm" className="text-xs">
+                Open Trip Planner
+              </Button>
+            </Link>
+          </div>
+          <p>
+            Create multi-day trip schedules configured by dawn Aarti timings, budget, and walking proximity.
+          </p>
         </div>
       </div>
     </div>

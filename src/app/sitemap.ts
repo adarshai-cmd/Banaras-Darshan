@@ -18,7 +18,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/safety",
     "/feedback",
     "/profile",
-    "/admin",
   ];
 
   return routes.map((route) => ({

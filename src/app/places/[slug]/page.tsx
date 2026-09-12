@@ -17,12 +17,28 @@ import {
   Info,
   AlertTriangle,
   ArrowLeft,
+  Car,
+  Bike,
+  Image as ImageIcon,
+  Compass,
 } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { Badge, Button, GlassCard } from "@/components/ui/GlassCard";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+interface ParkingData {
+  primary?: {
+    name: string;
+    distance: string;
+    feeStatus: string;
+    bike: boolean;
+    car: boolean;
+    bus?: boolean;
+    mapQuery?: string;
+  };
 }
 
 export default async function PlaceDetailPage({ params }: PageProps) {
@@ -36,12 +52,39 @@ export default async function PlaceDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  let parkingData: ParkingData | null = null;
+  if (place.parkingInfo) {
+    try {
+      parkingData = JSON.parse(place.parkingInfo);
+    } catch {
+      parkingData = null;
+    }
+  }
+
+  let galleryImages: Array<{ url: string; caption?: string }> = [];
+  if (place.galleryJson) {
+    try {
+      galleryImages = JSON.parse(place.galleryJson);
+    } catch {
+      galleryImages = [];
+    }
+  }
+
+  let nearbyPlaces: Array<{ name: string; distance?: string; category?: string; tip?: string }> = [];
+  if (place.nearbyPlacesJson) {
+    try {
+      nearbyPlaces = JSON.parse(place.nearbyPlacesJson);
+    } catch {
+      nearbyPlaces = [];
+    }
+  }
+
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
       {/* Back button */}
       <Link
         href="/explore"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 hover:underline"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Back to Explore Directory</span>
@@ -76,13 +119,13 @@ export default async function PlaceDetailPage({ params }: PageProps) {
         {/* Bottom Hero Info */}
         <div className="absolute bottom-6 left-6 right-6 z-10 space-y-2">
           <div className="flex items-center gap-2">
-            {place.rating ? (
+            {place.rating !== null && place.rating !== undefined ? (
               <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs font-semibold text-amber-400 border border-amber-500/30 flex items-center gap-1">
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                 {place.rating.toFixed(1)} {place.reviewCount ? `(${place.reviewCount} reviews)` : ""}
               </span>
             ) : (
-              <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs font-semibold text-amber-300 border border-amber-500/30 flex items-center gap-1">
+              <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs font-semibold text-slate-200 border border-white/20">
                 ⭐ Rating unavailable
               </span>
             )}
@@ -106,23 +149,23 @@ export default async function PlaceDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left 2 Cols: Details & Description */}
         <div className="lg:col-span-2 space-y-6">
-          <GlassCard className="p-6 sm:p-8 space-y-4" hoverEffect={false}>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-serif">
+          <GlassCard className="p-6 sm:p-8 space-y-4 bg-white border border-slate-200" hoverEffect={false}>
+            <h2 className="text-xl font-bold text-slate-950 font-serif">
               Overview & Cultural Significance
             </h2>
-            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+            <p className="text-sm font-semibold text-amber-800">
               {place.tagline}
             </p>
-            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
               {place.description}
             </p>
 
             {place.history && (
-              <div className="pt-4 border-t border-black/10 dark:border-white/10 space-y-1.5">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white font-serif">
+              <div className="pt-4 border-t border-slate-200 space-y-1.5">
+                <h3 className="text-sm font-bold text-slate-950 font-serif">
                   Historical & Skanda Purana Context
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {place.history}
                 </p>
               </div>
@@ -131,24 +174,24 @@ export default async function PlaceDetailPage({ params }: PageProps) {
 
           {/* Specialty or Amenities */}
           {place.popularDishes && (
-            <GlassCard className="p-6 space-y-2 border-orange-500/30" hoverEffect={false}>
-              <div className="flex items-center gap-2 text-xs font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wider">
+            <GlassCard className="p-6 space-y-2 border-orange-200 bg-orange-50/50" hoverEffect={false}>
+              <div className="flex items-center gap-2 text-xs font-bold text-orange-800 uppercase tracking-wider">
                 <Utensils className="w-4 h-4 text-orange-600" />
                 <span>Must-Try Signature Dishes</span>
               </div>
-              <p className="text-sm text-slate-800 dark:text-slate-200 font-medium">
+              <p className="text-sm text-slate-800 font-medium">
                 {place.popularDishes}
               </p>
             </GlassCard>
           )}
 
           {place.amenities && (
-            <GlassCard className="p-6 space-y-2 border-purple-500/30" hoverEffect={false}>
-              <div className="flex items-center gap-2 text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">
+            <GlassCard className="p-6 space-y-2 border-purple-200 bg-purple-50/50" hoverEffect={false}>
+              <div className="flex items-center gap-2 text-xs font-bold text-purple-800 uppercase tracking-wider">
                 <BedDouble className="w-4 h-4 text-purple-600" />
                 <span>Property Amenities</span>
               </div>
-              <p className="text-sm text-slate-800 dark:text-slate-200 font-medium">
+              <p className="text-sm text-slate-800 font-medium">
                 {place.amenities}
               </p>
             </GlassCard>
@@ -156,51 +199,104 @@ export default async function PlaceDetailPage({ params }: PageProps) {
 
           {/* Practical Tips */}
           {place.visitingTips && (
-            <div className="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-1">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-sky-400 uppercase tracking-wider">
+            <div className="p-5 rounded-2xl bg-blue-50 border border-blue-200 space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-blue-800 uppercase tracking-wider">
                 <Info className="w-4 h-4 text-blue-600" />
                 <span>Local Traveler Tip</span>
               </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-700 leading-relaxed">
                 {place.visitingTips}
               </p>
             </div>
           )}
 
           {place.safetyNotes && (
-            <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 space-y-1">
-              <div className="flex items-center gap-2 text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
+            <div className="p-5 rounded-2xl bg-rose-50 border border-rose-200 space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-rose-800 uppercase tracking-wider">
                 <AlertTriangle className="w-4 h-4 text-rose-600" />
                 <span>Safety & Etiquette Protocols</span>
               </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-700 leading-relaxed">
                 {place.safetyNotes}
               </p>
             </div>
           )}
+
+          {/* Dynamic Photo Gallery */}
+          {galleryImages.length > 0 && (
+            <GlassCard className="p-6 space-y-4 bg-white border border-slate-200" hoverEffect={false}>
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+                <ImageIcon className="w-4 h-4 text-amber-600" />
+                <span>Photo Gallery & Visuals ({galleryImages.length})</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {galleryImages.map((img, idx) => (
+                  <div key={idx} className="group relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 shadow-xs">
+                    <SafeImage
+                      src={img.url}
+                      alt={img.caption || place.name}
+                      category={place.category}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {img.caption && (
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 text-[10px] text-white truncate">
+                        {img.caption}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          )}
+
+          {/* Dynamic Curated Nearby Places */}
+          {nearbyPlaces.length > 0 && (
+            <GlassCard className="p-6 space-y-4 bg-white border border-slate-200" hoverEffect={false}>
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+                <Compass className="w-4 h-4 text-teal-600" />
+                <span>Curated Nearby Places</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {nearbyPlaces.map((np, idx) => (
+                  <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900">{np.name}</span>
+                      {np.distance && (
+                        <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                          {np.distance}
+                        </span>
+                      )}
+                    </div>
+                    {np.category && <p className="text-[10px] text-slate-500 uppercase">{np.category}</p>}
+                    {np.tip && <p className="text-[11px] text-slate-600 mt-1">{np.tip}</p>}
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          )}
         </div>
 
-        {/* Right 1 Col: Quick Info & Actions */}
+        {/* Right 1 Col: Quick Info, Parking & Actions */}
         <div className="space-y-6">
-          <GlassCard className="p-6 space-y-4" hoverEffect={false}>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white font-serif">
+          <GlassCard className="p-6 space-y-4 bg-white border border-slate-200" hoverEffect={false}>
+            <h3 className="text-base font-bold text-slate-950 font-serif">
               Visiting Details
             </h3>
 
             <div className="space-y-3 text-xs">
               <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-slate-900 dark:text-white">Address:</p>
-                  <p className="text-slate-600 dark:text-slate-300">{place.address}</p>
+                  <p className="font-semibold text-slate-900">Address:</p>
+                  <p className="text-slate-600">{place.address}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-2.5">
-                <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-slate-900 dark:text-white">Best Time:</p>
-                  <p className="text-slate-600 dark:text-slate-300">{place.bestTimeToVisit || "Morning / Evening"}</p>
+                  <p className="font-semibold text-slate-900">Best Time:</p>
+                  <p className="text-slate-600">{place.bestTimeToVisit || "Morning / Evening"}</p>
                 </div>
               </div>
 
@@ -208,20 +304,92 @@ export default async function PlaceDetailPage({ params }: PageProps) {
                 <div className="flex items-start gap-2.5">
                   <Clock className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-slate-900 dark:text-white">Hours:</p>
-                    <p className="text-slate-600 dark:text-slate-300">{place.openingHours}</p>
+                    <p className="font-semibold text-slate-900">Hours:</p>
+                    <p className="text-slate-600">{place.openingHours}</p>
                   </div>
                 </div>
               )}
 
               {place.nearestHub && (
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-300">
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-800">
                   <strong>Transit Hub:</strong> {place.nearestHub}
                 </div>
               )}
             </div>
 
-            <div className="pt-3 border-t border-black/10 dark:border-white/10 space-y-2">
+            {/* Nearby Parking Section (Point 11) */}
+            {parkingData?.primary ? (
+              <div className="pt-4 border-t border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Car className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Nearby Parking</span>
+                  </h4>
+                  <span className="text-[10px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md font-semibold border border-amber-300">
+                    Verified Stand
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                  <div>
+                    <p className="font-bold text-slate-900">{parkingData.primary.name}</p>
+                    <p className="text-[11px] text-slate-500">Distance: {parkingData.primary.distance}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-[11px] text-slate-700">
+                    <span className="px-2 py-0.5 rounded bg-white border border-slate-200 font-medium">
+                      {parkingData.primary.feeStatus}
+                    </span>
+                    {parkingData.primary.bike && (
+                      <span className="text-emerald-700 font-semibold flex items-center gap-0.5">
+                        Bike ✓
+                      </span>
+                    )}
+                    {parkingData.primary.car && (
+                      <span className="text-emerald-700 font-semibold flex items-center gap-0.5">
+                        Car ✓
+                      </span>
+                    )}
+                    {parkingData.primary.bus && (
+                      <span className="text-emerald-700 font-semibold flex items-center gap-0.5">
+                        Bus ✓
+                      </span>
+                    )}
+                  </div>
+
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      parkingData.primary.mapQuery || `${parkingData.primary.name} Varanasi`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-white border border-slate-300 hover:border-amber-400 text-slate-800 text-[11px] font-semibold hover:bg-slate-50 transition-all shadow-xs"
+                  >
+                    <Navigation className="w-3 h-3 text-amber-600" />
+                    <span>Navigate to Parking ↗</span>
+                  </a>
+                </div>
+
+                <p className="text-[10px] text-slate-500 italic">
+                  * Parking fee/status may vary — verify locally upon arrival.
+                </p>
+              </div>
+            ) : place.category === "GHAT" ? (
+              <div className="pt-4 border-t border-slate-200 space-y-2 text-xs">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Car className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nearby Parking</span>
+                </h4>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-[11px]">
+                  <p className="font-semibold text-slate-800">Godowlia / Maidagin Central Parking</p>
+                  <p className="mt-0.5">Vehicles are restricted along old city ghat lanes. Park at the nearest municipal stand and walk or take an e-rickshaw.</p>
+                  <p className="text-[10px] text-slate-500 italic mt-1">Parking fee/status may vary — verify locally.</p>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Actions */}
+            <div className="pt-3 border-t border-slate-200 space-y-2">
               <a
                 href={`https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}`}
                 target="_blank"
@@ -236,7 +404,7 @@ export default async function PlaceDetailPage({ params }: PageProps) {
                 href={`/map?lat=${place.latitude}&lng=${place.longitude}&place=${encodeURIComponent(
                   place.name
                 )}`}
-                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white dark:bg-white/10 border border-slate-300 dark:border-white/20 text-slate-800 dark:text-white text-xs font-semibold hover:bg-slate-50 transition-all"
+                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white border border-slate-300 text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-all shadow-xs"
               >
                 <span>View on Banaras Interactive Map</span>
               </Link>
@@ -251,7 +419,7 @@ export default async function PlaceDetailPage({ params }: PageProps) {
             </div>
           </GlassCard>
 
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>Factually verified in the official Banaras Darshan heritage index.</span>
           </div>

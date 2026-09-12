@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { MapPin, Navigation, Layers, Compass, ArrowRight } from "lucide-react";
 import { RoutePlannerWidget } from "@/components/map/RoutePlannerWidget";
+import { BanarasWeatherWidget } from "@/components/weather/BanarasWeatherWidget";
 import { GlassCard, Button } from "@/components/ui/GlassCard";
 import { MapMarkerData } from "@/components/map/LeafletMap";
 
@@ -103,6 +104,11 @@ export default function MapPage() {
           </p>
         </div>
         <RoutePlannerWidget />
+      </div>
+
+      {/* Banaras Live Weather & 5-Day Forecast Panel */}
+      <div className="pt-4 border-t border-slate-200">
+        <BanarasWeatherWidget />
       </div>
     </div>
   );

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Compass, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/GlassCard";
+import { PromotionalSlot } from "@/components/promotions/PromotionalSlot";
+import { MobilePromotionalCarousel } from "@/components/promotions/MobilePromotionalCarousel";
 
 export function CinematicHero() {
   const router = useRouter();
@@ -93,7 +95,7 @@ export function CinematicHero() {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="max-w-4xl mx-auto text-center z-20 space-y-8"
+        className="max-w-7xl mx-auto text-center z-20 space-y-8 px-4"
       >
         {/* Heritage Tag Badge */}
         <motion.div variants={itemVariants}>
@@ -119,47 +121,67 @@ export function CinematicHero() {
           </p>
         </motion.div>
 
-        {/* Large AI Search Box with Refined High-Contrast Glassmorphism */}
-        <motion.div variants={itemVariants} className="max-w-2xl mx-auto">
-          <form
-            onSubmit={handleSearch}
-            className="p-2 sm:p-2.5 rounded-2xl bg-white border-2 border-amber-500/30 shadow-2xl shadow-amber-900/10 focus-within:border-amber-600 focus-within:ring-4 focus-within:ring-amber-500/20 transition-all flex flex-col sm:flex-row gap-2"
-          >
-            <div className="relative flex-1 flex items-center pl-3">
-              <Sparkles className="w-5 h-5 text-amber-600 shrink-0 mr-3 animate-pulse" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Ask anything about Banaras… (e.g. best food under ₹150, sunset ghats, 2-day plan)"
-                className="w-full bg-transparent text-slate-950 placeholder:text-slate-500 text-sm sm:text-base focus:outline-none font-medium"
-              />
+        {/* Central Workspace: Left Promo Slot + AI Search Center + Right Promo Slot */}
+        <motion.div variants={itemVariants} className="w-full">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 xl:gap-8">
+            {/* Left Promotional Banner (Desktop Only) */}
+            <div className="hidden lg:flex shrink-0 items-center justify-end">
+              <PromotionalSlot placement="LEFT" />
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              className="px-6 py-3 shrink-0 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-bold text-sm shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 flex items-center justify-center gap-2 cursor-pointer transition-all"
-            >
-              <span>Ask AI Guide</span>
-              <ArrowRight className="w-4 h-4" />
-            </motion.button>
-          </form>
 
-          {/* Sample Prompts Chips */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
-            <span className="text-slate-600 font-semibold">Try asking:</span>
-            {samplePrompts.map((prompt) => (
-              <motion.button
-                key={prompt}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => handleChipClick(prompt)}
-                className="px-3.5 py-1.5 rounded-full bg-white hover:bg-amber-50 border border-amber-300/70 hover:border-amber-500 text-slate-800 hover:text-amber-950 text-xs font-medium shadow-sm transition-all cursor-pointer"
+            {/* Central AI Search Box Experience */}
+            <div className="w-full max-w-2xl space-y-4">
+              <form
+                onSubmit={handleSearch}
+                className="p-2 sm:p-2.5 rounded-2xl bg-white border-2 border-amber-500/30 shadow-2xl shadow-amber-900/10 focus-within:border-amber-600 focus-within:ring-4 focus-within:ring-amber-500/20 transition-all flex flex-col sm:flex-row gap-2"
               >
-                “{prompt}”
-              </motion.button>
-            ))}
+                <div className="relative flex-1 flex items-center pl-3">
+                  <Sparkles className="w-5 h-5 text-amber-600 shrink-0 mr-3 animate-pulse" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Ask anything about Banaras… (e.g. best food under ₹150, sunset ghats, 2-day plan)"
+                    className="w-full bg-transparent text-slate-950 placeholder:text-slate-500 text-sm sm:text-base focus:outline-none font-medium"
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className="px-6 py-3 shrink-0 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-bold text-sm shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <span>Ask AI Guide</span>
+                  <ArrowRight className="w-4 h-4" />
+                </motion.button>
+              </form>
+
+              {/* Sample Prompts Chips */}
+              <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+                <span className="text-slate-600 font-semibold">Try asking:</span>
+                {samplePrompts.map((prompt) => (
+                  <motion.button
+                    key={prompt}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => handleChipClick(prompt)}
+                    className="px-3.5 py-1.5 rounded-full bg-white hover:bg-amber-50 border border-amber-300/70 hover:border-amber-500 text-slate-800 hover:text-amber-950 text-xs font-medium shadow-sm transition-all cursor-pointer"
+                  >
+                    “{prompt}”
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Promotional Banner (Desktop Only) */}
+            <div className="hidden lg:flex shrink-0 items-center justify-start">
+              <PromotionalSlot placement="RIGHT" />
+            </div>
+          </div>
+
+          {/* Mobile-Friendly Swipeable Promotional Carousel (Mobile & Tablet Only) */}
+          <div className="block lg:hidden max-w-md mx-auto pt-6">
+            <MobilePromotionalCarousel />
           </div>
         </motion.div>
 

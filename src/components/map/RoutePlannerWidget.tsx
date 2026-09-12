@@ -10,6 +10,9 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  CloudSun,
+  Umbrella,
+  Sparkles,
 } from "lucide-react";
 import {
   fetchOSRMRoute,
@@ -60,8 +63,8 @@ const DESTINATIONS = [
     tips: "Smooth highway transit 10km north of Cantt. Archeological Museum closed on Fridays.",
   },
   {
-    id: "bhu",
-    name: "BHU (Banaras Hindu University - VT)",
+    id: "bhu_campus",
+    name: "Banaras Hindu University (BHU / Vishwanath Temple)",
     lat: 25.2677,
     lng: 82.9913,
     laneRestricted: false,
@@ -79,6 +82,20 @@ export function RoutePlannerWidget({
   const [travelMode, setTravelMode] = useState<"AUTO" | "CAR" | "WALKING" | "BOAT">("AUTO");
   const [routeData, setRouteData] = useState<RouteResult | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [liveWeather, setLiveWeather] = useState<any | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/weather")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data?.weather) setLiveWeather(data.weather);
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const startHub = VARANASI_HUBS[fromKey] || VARANASI_HUBS["cantt_station"];
   const endDest = DESTINATIONS.find((d) => d.id === destId) || DESTINATIONS[0];
@@ -263,7 +280,27 @@ export function RoutePlannerWidget({
                 <span>Finding optimal route...</span>
               </div>
             ) : (
-              <div className="space-y-4 mt-3">
+              <div className="space-y-3.5 mt-3">
+                {/* Live Weather Status in Map Route Planner */}
+                {liveWeather && (
+                  <div className="p-2.5 rounded-xl bg-sky-50/90 border border-sky-200/80 text-sky-950 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-lg bg-white shadow-xs shrink-0">
+                        <CloudSun className="w-4 h-4 text-sky-600" />
+                      </div>
+                      <div className="text-[11px] leading-tight">
+                        <span className="text-slate-500">Live Weather:</span>{" "}
+                        <strong className="text-slate-900">{liveWeather.temperature}°C • {liveWeather.condition}</strong>
+                      </div>
+                    </div>
+                    {liveWeather.rainChance > 20 && (
+                      <span className="text-[10px] font-semibold text-sky-700 bg-sky-100/80 px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
+                        <Umbrella className="w-3 h-3" /> {liveWeather.rainChance}% Rain
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 text-orange-700 flex items-center justify-center shrink-0 shadow-sm">
                     <Clock className="w-5 h-5" />
@@ -277,15 +314,19 @@ export function RoutePlannerWidget({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-200 text-amber-800 flex items-center justify-center shrink-0 shadow-sm">
                     <CircleDollarSign className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 font-semibold">Standard Benchmark Fare</p>
-                    <p className="text-base font-bold text-emerald-800 font-mono">
-                      {routeData?.approxFare ?? "Free"}
+                    <p className="text-xs text-slate-500 font-semibold">Transport Fare Status</p>
+                    <p className="text-sm font-bold text-slate-900 font-mono">
+                      {routeData?.approxFare ?? "Fare unavailable"}
                     </p>
                   </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-relaxed font-medium">
+                  ⚠️ <strong>Local Travel Note:</strong> Local travel fares may vary. Please verify the current fare locally before travelling.
                 </div>
 
                 {routeData?.isRealRoadNetwork && (
@@ -306,9 +347,6 @@ export function RoutePlannerWidget({
             </div>
             <p className="text-[11px] leading-relaxed text-slate-600 font-normal">
               {endDest.tips}
-            </p>
-            <p className="text-[10px] text-slate-500 italic pt-1 border-t border-slate-100">
-              * Fares may vary during peak festival rush or late night. Confirm locally before boarding.
             </p>
           </div>
         </div>

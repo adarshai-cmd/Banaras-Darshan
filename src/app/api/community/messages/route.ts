@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { evaluateMessageContent } from "@/lib/moderation";
 import { verifyRecommendationClaim } from "@/lib/verification";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -40,8 +41,16 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: "Please sign in to post in the community." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
-    const { content, channel = "general", userName = "Guest Explorer", userBadge = "New Explorer" } = body;
+    const { content, channel = "general" } = body;
 
     if (!content || typeof content !== "string") {
       return NextResponse.json(
@@ -85,9 +94,9 @@ export async function POST(req: NextRequest) {
     // 3. Save Message to Database
     const newMessage = await prisma.communityMessage.create({
       data: {
-        userId: "usr_community_" + Math.random().toString(36).substring(2, 8),
-        userName: userName.trim() || "Kashi Explorer",
-        userBadge: userBadge || "New Explorer",
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userBadge: currentUser.badge,
         channel,
         content: content.trim(),
         isVerified: verification.isVerified,
