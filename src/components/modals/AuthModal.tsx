@@ -25,6 +25,14 @@ export function AuthModal({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      setError(null);
+      setSuccessMsg(null);
+    }
+  }, [initialMode, isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +76,7 @@ export function AuthModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-6 overflow-hidden">
+      <div className="relative w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-5 overflow-hidden">
         {/* Decorative Top Accent */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600" />
 
@@ -82,18 +90,50 @@ export function AuthModal({
         </button>
 
         {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 border border-amber-500/20 shadow-sm mx-auto">
-            <Sparkles className="w-6 h-6 text-amber-600" />
+        <div className="text-center space-y-1.5 pt-1">
+          <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-700 border border-amber-500/20 shadow-sm mx-auto">
+            <Sparkles className="w-5 h-5 text-amber-600" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 font-serif">
-            {mode === "signup" ? "Join Banaras Darshan" : "Welcome Back"}
+            {mode === "signup" ? "Create Your Account" : "Sign In to Banaras Darshan"}
           </h2>
           <p className="text-xs text-slate-600 max-w-xs mx-auto">
             {mode === "signup"
-              ? "Create your pilgrim explorer profile to save sacred itineraries and chat with verified travelers."
-              : "Access your saved ghats, temples, custom itineraries, and community dispatches."}
+              ? "Join Banaras Darshan to unlock AI Guide, Community Chat, 84 Ghats & personalized itineraries."
+              : "Sign in to access your saved places, AI Guide, verified community, and trip plans."}
           </p>
+        </div>
+
+        {/* Top Segmented Tabs: Sign In / Create My Account */}
+        <div className="flex p-1 rounded-2xl bg-slate-100 border border-slate-200/80 shadow-inner">
+          <button
+            type="button"
+            onClick={() => {
+              setMode("login");
+              setError(null);
+            }}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              mode === "login"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-200/80"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("signup");
+              setError(null);
+            }}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              mode === "signup"
+                ? "bg-amber-500 text-slate-950 shadow-sm font-extrabold"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Create My Account
+          </button>
         </div>
 
         {/* Form Alerts */}

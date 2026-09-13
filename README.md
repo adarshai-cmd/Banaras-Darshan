@@ -127,6 +127,13 @@ Combining cutting-edge web engineering with deep respect for Varanasi's timeless
 - **Live Visual Editor**: Markdown editor with real-time preview, instant status toggles (Draft / Published), and one-click save.
 - **Audit-Ready Versioning**: Automatic semantic version incrementation upon edits, complete revision history logs, and instant rollback capabilities.
 
+### 12. 🔐 Explorer Access Control & Preview Gating
+- **Guest Front-Page Preview**: Unauthenticated visitors receive an inviting taste of Varanasi (Cinematic Hero and Today in Banaras Ganga Aarti & Sunrise schedules).
+- **Auto Sign In / Create Account Trigger**: On arrival at the homepage, the auth modal automatically welcomes guests with clean segmented tabs for **"Sign In"** and **"Create My Account"**.
+- **Homepage Gate**: Deep interactive widgets (Full Catalog, AI Assistant, Traveler Community, GPS Radar, Route Planner) are blurred and locked behind an "Unlock Full Access" card.
+- **Full Route Protection (`AuthGuard`)**: Direct visits to explore, temples, ghats, food, stay, hidden, parking, map, plan, community, and AI guide require an explorer account.
+- **Backend API Protection**: `/api/ai/chat` and community dispatches strictly reject unauthenticated calls with HTTP 401.
+
 ---
 
 ## 🛠️ Technology Stack

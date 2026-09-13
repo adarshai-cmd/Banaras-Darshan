@@ -20,22 +20,14 @@ import {
   LogOut,
   LogIn,
 } from "lucide-react";
-import { AuthModal } from "@/components/modals/AuthModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [currentUser, setCurrentUser] = useState<{
-    id: string;
-    name: string;
-    email: string | null;
-    role: string;
-    avatar: string | null;
-  } | null>(null);
+  const { user: currentUser, isAuthenticated, logout, openAuthModal } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -45,29 +37,15 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Check authentication status
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.user) {
-          setCurrentUser(data.user);
-        } else {
-          setCurrentUser(null);
-        }
-      })
-      .catch(() => setCurrentUser(null));
-  }, []);
-
   const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      setCurrentUser(null);
-      router.push("/");
-      router.refresh();
-      window.location.reload();
-    } catch (err) {
-      console.error("Logout failed", err);
+    await logout();
+  };
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      openAuthModal("login");
+      setMobileMenuOpen(false);
     }
   };
 
@@ -94,7 +72,7 @@ export function Navbar() {
       >
         <div className="w-full max-w-[1560px] mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
-            {/* 1. Left: Brand Logo moved cleanly to the left */}
+            {/* 1. Left: Brand Logo */}
             <div className="flex items-center shrink-0">
               <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
                 <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-orange-500 to-amber-400 p-[1.5px] shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform duration-300 shrink-0">
@@ -115,7 +93,7 @@ export function Navbar() {
               </Link>
             </div>
 
-            {/* 2. Center: Desktop Navigation Links Pill */}
+            {/* 2. Center: Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 p-1 rounded-full bg-white/95 border border-slate-200/90 shadow-sm shrink-0">
               {navLinks.map((link) => {
                 const Icon = link.icon;
@@ -127,6 +105,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    onClick={(e) => handleNavClick(e, link.href)}
                     className={`relative flex items-center gap-1.5 px-2.5 xl:px-3.5 py-1.5 rounded-full text-[11px] xl:text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 ${
                       isActive
                         ? isPlan
@@ -158,11 +137,12 @@ export function Navbar() {
               })}
             </nav>
 
-            {/* 3. Right Action Cluster: Ask AI + Safety + Single Sign In Button */}
+            {/* 3. Right Action Cluster: Ask AI + Safety + Sign In */}
             <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 shrink-0">
               {/* Ask Banaras AI */}
               <Link
                 href="/ai-assistant"
+                onClick={(e) => handleNavClick(e, "/ai-assistant")}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 border border-amber-500/50 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-900 animate-pulse shrink-0" />
@@ -172,13 +152,14 @@ export function Navbar() {
               {/* Travel Safety */}
               <Link
                 href="/safety"
+                onClick={(e) => handleNavClick(e, "/safety")}
                 className="p-2 rounded-full text-slate-700 hover:text-emerald-700 bg-white border border-slate-200 hover:border-emerald-300 transition-all shadow-sm shrink-0"
                 title="Safety Guidelines & Police Helplines"
               >
                 <Shield className="w-4 h-4 text-emerald-600 shrink-0" />
               </Link>
 
-              {/* Auth / Profile Area (Clean single Sign In button, no duplicate Sign Up) */}
+              {/* Auth / Profile Area */}
               {currentUser ? (
                 <div className="flex items-center gap-1.5">
                   <Link
@@ -204,10 +185,7 @@ export function Navbar() {
                 </div>
               ) : (
                 <button
-                  onClick={() => {
-                    setAuthMode("login");
-                    setAuthModalOpen(true);
-                  }}
+                  onClick={() => openAuthModal("login")}
                   className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-slate-900 bg-white border border-slate-300 hover:border-amber-500 hover:bg-amber-50/50 hover:text-amber-950 transition-all shadow-sm cursor-pointer whitespace-nowrap"
                 >
                   <LogIn className="w-3.5 h-3.5 text-amber-700 shrink-0" />
@@ -220,12 +198,14 @@ export function Navbar() {
             <div className="flex lg:hidden items-center gap-1.5 sm:gap-2 shrink-0">
               <Link
                 href="/plan"
+                onClick={(e) => handleNavClick(e, "/plan")}
                 className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow-sm whitespace-nowrap"
               >
                 Plan Trip
               </Link>
               <Link
                 href="/ai-assistant"
+                onClick={(e) => handleNavClick(e, "/ai-assistant")}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-400 text-slate-950 shadow-sm whitespace-nowrap"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-900 shrink-0" />
@@ -253,7 +233,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => handleNavClick(e, link.href)}
                     className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold transition-all ${
                       isActive
                         ? "bg-amber-500 text-slate-950 shadow-sm"
@@ -294,8 +274,7 @@ export function Navbar() {
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    setAuthMode("login");
-                    setAuthModalOpen(true);
+                    openAuthModal("login");
                   }}
                   className="w-full py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 border border-amber-500/40 shadow-sm text-center flex items-center justify-center gap-1.5 cursor-pointer"
                 >
@@ -307,16 +286,6 @@ export function Navbar() {
           </div>
         )}
       </header>
-
-      {/* Global Auth Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode={authMode}
-        onSuccess={(user) => {
-          setCurrentUser(user);
-        }}
-      />
     </>
   );
 }

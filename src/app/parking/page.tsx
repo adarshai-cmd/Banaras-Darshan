@@ -20,6 +20,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { GlassCard, Button } from "@/components/ui/GlassCard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export const metadata: Metadata = {
   title: "Verified Municipal Parking Stands & Vehicle Logistics | Banaras Darshan",
@@ -44,7 +45,11 @@ export default async function ParkingPage() {
   });
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+    <AuthGuard
+      title="Verified Municipal Parking Stands"
+      description="Sign in or create an account to view vehicle logistics, multi-level parking rates, and walking distances to Shri Kashi Vishwanath temple and ghats."
+    >
+      <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
       {/* 1. Page Header */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-sky-700 mb-1">
@@ -332,5 +337,6 @@ export default async function ParkingPage() {
         </Link>
       </div>
     </div>
+    </AuthGuard>
   );
 }

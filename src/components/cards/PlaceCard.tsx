@@ -16,6 +16,7 @@ import {
 import { SafeImage } from "@/components/ui/SafeImage";
 import { Badge } from "@/components/ui/GlassCard";
 import { PlaceDetailsModal } from "@/components/modals/PlaceDetailsModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface PlaceCardData {
   id: string;
@@ -60,13 +61,30 @@ export function PlaceCard({
   onSaveToggle?: (id: string) => void;
   isSaved?: boolean;
 }) {
+  const { isAuthenticated, openAuthModal } = useAuth();
   const [saved, setSaved] = useState(isSaved);
   const [copied, setCopied] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const openDetails = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!isAuthenticated) {
+      openAuthModal("login");
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) {
+      openAuthModal("login");
+      return;
+    }
     setSaved(!saved);
     if (onSaveToggle) {
       onSaveToggle(place.id);
@@ -107,7 +125,7 @@ export function PlaceCard({
       <div className="group rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-amber-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/5 flex flex-col h-full text-slate-900">
         {/* Visual Header */}
         <div
-          onClick={() => setIsModalOpen(true)}
+          onClick={openDetails}
           className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-900 cursor-pointer"
         >
           <SafeImage
@@ -185,7 +203,7 @@ export function PlaceCard({
         <div className="p-5 flex-1 flex flex-col justify-between space-y-4 bg-white">
           <div>
             <div
-              onClick={() => setIsModalOpen(true)}
+              onClick={openDetails}
               className="flex items-start justify-between gap-2 cursor-pointer group-hover:text-amber-700 transition-colors"
             >
               <div>
@@ -250,6 +268,12 @@ export function PlaceCard({
               href={`/map?lat=${place.latitude}&lng=${place.longitude}&place=${encodeURIComponent(
                 place.name
               )}`}
+              onClick={(e) => {
+                if (!isAuthenticated) {
+                  e.preventDefault();
+                  openAuthModal("login");
+                }
+              }}
               className="flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 font-bold hover:underline"
             >
               <Navigation className="w-3.5 h-3.5" />
@@ -257,7 +281,7 @@ export function PlaceCard({
             </Link>
             <button
               type="button"
-              onClick={() => setIsModalOpen(true)}
+              onClick={openDetails}
               className="inline-flex items-center gap-1 text-xs text-slate-900 font-bold px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-all cursor-pointer shadow-sm"
             >
               <Eye className="w-3.5 h-3.5 text-amber-700" />

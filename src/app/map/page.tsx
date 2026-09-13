@@ -7,6 +7,7 @@ import { RoutePlannerWidget } from "@/components/map/RoutePlannerWidget";
 import { BanarasWeatherWidget } from "@/components/weather/BanarasWeatherWidget";
 import { ParkingSection } from "@/components/parking/ParkingSection";
 import { MapMarkerData } from "@/components/map/LeafletMap";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 // Dynamically import Leaflet map with no SSR to prevent leaflet window reference errors
 const LeafletMap = dynamic(
@@ -89,21 +90,25 @@ export default function MapPage() {
   ];
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-sky-700 mb-1">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>Cartographic Explorer</span>
+    <AuthGuard
+      title="Interactive Banaras Map & Mobility"
+      description="Sign in or create an account to access interactive OpenStreetMap pins, station-to-ghat realistic routing, and live weather overlays."
+    >
+      <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-sky-700 mb-1">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>Cartographic Explorer</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 font-serif">
+              Interactive Banaras Map & Mobility
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 font-normal">
+              Locate 84 ghats, ancient temples, legendary food stalls, heritage stays, and official parking stands on live OpenStreetMap tiles
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 font-serif">
-            Interactive Banaras Map & Mobility
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1 font-normal">
-            Locate 84 ghats, ancient temples, legendary food stalls, heritage stays, and official parking stands on live OpenStreetMap tiles
-          </p>
-        </div>
 
         {/* Category Layers */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -151,5 +156,6 @@ export default function MapPage() {
         <BanarasWeatherWidget />
       </div>
     </div>
+    </AuthGuard>
   );
 }

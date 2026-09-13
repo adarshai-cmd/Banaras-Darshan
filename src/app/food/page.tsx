@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Utensils, Search, CheckCircle2, Coffee, Sparkles } from "lucide-react";
 import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
 import { GlassCard, Badge } from "@/components/ui/GlassCard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 const FOOD_FILTERS = [
   { id: "ALL", label: "All Culinary Spots" },
@@ -47,7 +48,11 @@ export default function FoodPage() {
   });
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+    <AuthGuard
+      title="Banaras Culinary Heritage & Food Guide"
+      description="Sign in or create an account to explore authentic street food shops, Tamatar Chaat stalls, Malaiyo makers, and famous Banarasi Paan spots."
+    >
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
       {/* Food Header */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-amber-800 mb-1">
@@ -193,5 +198,6 @@ export default function FoodPage() {
         )}
       </div>
     </div>
+    </AuthGuard>
   );
 }

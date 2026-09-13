@@ -2,10 +2,15 @@ import React from "react";
 import { CalendarCheck, Compass, DollarSign, Clock } from "lucide-react";
 import { TripPlannerWidget } from "@/components/trip/TripPlannerWidget";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function PlanTripPage() {
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+    <AuthGuard
+      title="Personalized AI Trip Planner"
+      description="Sign in or create an account to generate custom 1 to 3-day non-backtracking itineraries, budget calculators, and exportable PDF travel schedules."
+    >
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 mb-1">
@@ -63,5 +68,6 @@ export default function PlanTripPage() {
       {/* Main Interactive Planner */}
       <TripPlannerWidget />
     </div>
+    </AuthGuard>
   );
 }

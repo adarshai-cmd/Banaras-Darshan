@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
 import { GlassCard, Button } from "@/components/ui/GlassCard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 function ExploreContent() {
   const searchParams = useSearchParams();
@@ -233,32 +234,36 @@ function ExploreContent() {
 
 export default function ExplorePage() {
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 mb-1">
-          <Compass className="w-3.5 h-3.5" />
-          <span>Factual Exploration</span>
-        </div>
-        <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 font-serif">
-          Explore Banaras
-        </h1>
-        <p className="text-slate-600 text-sm font-normal leading-relaxed">
-          Filter through sacred shrines, ghats, centuries-old food shops, riverside stays,
-          and hidden lanes across Varanasi.
-        </p>
-      </div>
-
-      <Suspense
-        fallback={
-          <div className="p-16 text-center text-slate-400">
-            <div className="w-8 h-8 mx-auto mb-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-            Loading explorer...
+    <AuthGuard
+      title="Explore Banaras Directory"
+      description="Sign in or create an account to browse our complete curated directory of temples, 84 ghats, iconic street food, and hidden galliyan."
+    >
+      <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 mb-1">
+            <Compass className="w-3.5 h-3.5" />
+            <span>Factual Exploration</span>
           </div>
-        }
-      >
-        <ExploreContent />
-      </Suspense>
-    </div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 font-serif">
+            Explore Banaras
+          </h1>
+          <p className="text-slate-600 text-sm font-normal leading-relaxed">
+            Filter through sacred shrines, ghats, centuries-old food shops, riverside stays,
+            and hidden lanes across Varanasi.
+          </p>
+        </div>
+
+        <Suspense
+          fallback={
+            <div className="p-16 text-center text-slate-400">
+              <div className="w-8 h-8 mx-auto mb-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              Loading explorer...
+            </div>
+          }
+        >
+          <ExploreContent />
+        </Suspense>
+      </div>
+    </AuthGuard>
   );
 }

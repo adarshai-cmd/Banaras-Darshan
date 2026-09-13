@@ -21,6 +21,7 @@ import {
 import { GlassCard, Button, Badge } from "@/components/ui/GlassCard";
 import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
 import { ProfileClientSections } from "./ProfileClientSections";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export const revalidate = 0; // Dynamic for real user session
 
@@ -29,35 +30,12 @@ export default async function ProfilePage() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-3">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-700 border border-amber-500/20 flex items-center justify-center mx-auto shadow-sm">
-            <UserIcon className="w-7 h-7 text-amber-600" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-950 font-serif">
-            Sign In to Banaras Darshan
-          </h1>
-          <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-            Create an account or sign in to save sacred ghats, preserve your custom itineraries, post in the community chat, and submit new local discoveries.
-          </p>
-        </div>
-
-        {/* Client Auth Box */}
-        <ProfileClientSections mode="auth" />
-
-        {/* Developer Seed Accounts Note (Clearly Separated) */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1.5 max-w-md mx-auto shadow-xs">
-          <div className="flex items-center gap-1.5 font-bold text-slate-800">
-            <Shield className="w-3.5 h-3.5 text-amber-700" />
-            <span>Development & Testing Accounts:</span>
-          </div>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            • <strong>Demo Explorer:</strong> <code className="text-amber-800 bg-amber-50 px-1 py-0.5 rounded">explorer@banarasdarshan.com</code> / <code className="text-slate-700">Explorer2026!</code>
-            <br />
-            • <strong>Editorial Admin:</strong> <code className="text-amber-800 bg-amber-50 px-1 py-0.5 rounded">admin@banarasdarshan.com</code> / <code className="text-slate-700">AdminPassword2026!</code>
-          </p>
-        </div>
-      </div>
+      <AuthGuard
+        title="Explorer Profile & Saved Itineraries"
+        description="Sign in or create an account to view your saved places, custom itineraries, community badges, and explorer reputation."
+      >
+        <div />
+      </AuthGuard>
     );
   }
 

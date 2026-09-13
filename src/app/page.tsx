@@ -26,6 +26,7 @@ import { AIAssistantWidget } from "@/components/ai/AIAssistantWidget";
 import { BanarasWeatherWidget } from "@/components/weather/BanarasWeatherWidget";
 import { ParkingSection } from "@/components/parking/ParkingSection";
 import { Button } from "@/components/ui/GlassCard";
+import { HomepageLockedSection } from "@/components/home/HomepageLockedSection";
 
 // Dynamic data fetching with fallback revalidation
 export const revalidate = 60;
@@ -82,8 +83,10 @@ export default async function HomePage() {
       {/* 2. Today in Banaras (Live Aarti, Sunrise, Weather & River navigation) */}
       <TodayInBanaras />
 
-      {/* 3. Explore Banaras by Category */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Gated Sections for Registered Explorers */}
+      <HomepageLockedSection>
+        {/* 3. Explore Banaras by Category */}
+        <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 mb-2">
             <Compass className="w-3.5 h-3.5" />
@@ -379,6 +382,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      </HomepageLockedSection>
     </main>
   );
 }

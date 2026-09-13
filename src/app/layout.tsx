@@ -3,6 +3,7 @@ import "./globals.css";
 import { Navbar } from "@/components/navigation/Navbar";
 import { Footer } from "@/components/navigation/Footer";
 import { CookieConsentBanner } from "@/components/ui/CookieConsentBanner";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: "Banaras Darshan | Discover Banaras. Your Way.",
@@ -54,10 +55,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full scroll-smooth">
       <body className="min-h-full flex flex-col bg-[#FAF8F5] text-slate-900 antialiased selection:bg-amber-500 selection:text-white">
-        <Navbar />
-        <div className="flex-1">{children}</div>
-        <Footer />
-        <CookieConsentBanner />
+        <AuthProvider>
+          <Navbar />
+          <div className="flex-1">{children}</div>
+          <Footer />
+          <CookieConsentBanner />
+        </AuthProvider>
       </body>
     </html>
   );

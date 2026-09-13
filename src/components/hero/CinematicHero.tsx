@@ -8,10 +8,12 @@ import { Sparkles, ArrowRight, Compass, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/GlassCard";
 import { PromotionalSlot } from "@/components/promotions/PromotionalSlot";
 import { MobilePromotionalCarousel } from "@/components/promotions/MobilePromotionalCarousel";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function CinematicHero() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const { isAuthenticated, openAuthModal } = useAuth();
 
   const samplePrompts = [
     "Best breakfast under ₹150?",
@@ -23,10 +25,18 @@ export function CinematicHero() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
+    if (!isAuthenticated) {
+      openAuthModal("login");
+      return;
+    }
     router.push(`/ai-assistant?q=${encodeURIComponent(searchQuery.trim())}`);
   };
 
   const handleChipClick = (prompt: string) => {
+    if (!isAuthenticated) {
+      openAuthModal("login");
+      return;
+    }
     setSearchQuery(prompt);
     router.push(`/ai-assistant?q=${encodeURIComponent(prompt)}`);
   };
@@ -187,7 +197,15 @@ export function CinematicHero() {
 
         {/* Primary CTA Buttons */}
         <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center gap-4 pt-2">
-          <Link href="/explore">
+          <Link
+            href="/explore"
+            onClick={(e) => {
+              if (!isAuthenticated) {
+                e.preventDefault();
+                openAuthModal("login");
+              }
+            }}
+          >
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="primary"
@@ -199,7 +217,15 @@ export function CinematicHero() {
               </Button>
             </motion.div>
           </Link>
-          <Link href="/plan">
+          <Link
+            href="/plan"
+            onClick={(e) => {
+              if (!isAuthenticated) {
+                e.preventDefault();
+                openAuthModal("login");
+              }
+            }}
+          >
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="outline"

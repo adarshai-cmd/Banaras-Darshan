@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { Badge, GlassCard } from "@/components/ui/GlassCard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -151,7 +152,11 @@ export default async function PlaceDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
+    <AuthGuard
+      title={place.name}
+      description="Sign in or create an account to view full verified place details, visitor protocols, dress codes, aarti schedules, and nearby recommendations."
+    >
+      <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
       {/* Back button */}
       <Link
         href="/explore"
@@ -505,5 +510,6 @@ export default async function PlaceDetailPage({ params }: PageProps) {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }

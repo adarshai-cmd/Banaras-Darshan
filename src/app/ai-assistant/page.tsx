@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Sparkles, ShieldCheck } from "lucide-react";
 import { AIAssistantWidget } from "@/components/ai/AIAssistantWidget";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 function AIAssistantContent() {
   const searchParams = useSearchParams();
@@ -13,7 +14,11 @@ function AIAssistantContent() {
 
 export default function AIAssistantPage() {
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
+    <AuthGuard
+      title="Banaras AI Travel Assistant"
+      description="Sign in or create an account to consult our 24/7 factual AI guide for temples, aarti timings, boat rates, and personalized itineraries."
+    >
+      <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 mb-1">
@@ -52,5 +57,6 @@ export default function AIAssistantPage() {
         </span>
       </div>
     </div>
+    </AuthGuard>
   );
 }

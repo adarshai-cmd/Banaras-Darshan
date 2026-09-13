@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { BedDouble, MapPin, Search } from "lucide-react";
 import { PlaceCard, PlaceCardData } from "@/components/cards/PlaceCard";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 const STAY_FILTERS = [
   { id: "ALL", label: "All Accommodations" },
@@ -43,7 +44,11 @@ export default function StayPage() {
   });
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+    <AuthGuard
+      title="Verified Heritage Stays & Hostels"
+      description="Sign in or create an account to discover verified riverside palaces, authentic ghat guesthouses, and backpacker hostels in Varanasi."
+    >
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-amber-800 mb-1">
@@ -149,5 +154,6 @@ export default function StayPage() {
         )}
       </div>
     </div>
+    </AuthGuard>
   );
 }

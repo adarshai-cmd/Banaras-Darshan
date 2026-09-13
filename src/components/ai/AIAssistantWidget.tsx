@@ -15,6 +15,7 @@ import {
 import { GlassCard, Button } from "@/components/ui/GlassCard";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { LanguageOption } from "@/lib/ai-engine";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChatCard {
   id: string;
@@ -52,6 +53,7 @@ const SUPPORTED_LANGUAGES: Array<{ id: LanguageOption; label: string; name: stri
 
 export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: string }) {
   const [selectedLang, setSelectedLang] = useState<LanguageOption>("auto");
+  const { isAuthenticated, openAuthModal } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -92,6 +94,11 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
       const query = questionToSend || input;
       if (!query.trim()) return;
 
+      if (!isAuthenticated) {
+        openAuthModal("login");
+        return;
+      }
+
       const userMessage: Message = {
         role: "user",
         content: query.trim(),
@@ -110,6 +117,11 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
         });
         const data = await res.json();
 
+        if (data.requiresAuth) {
+          openAuthModal("login");
+          return;
+        }
+
         if (data.success) {
           const assistantMessage: Message = {
             role: "assistant",
@@ -125,7 +137,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
             ...prev,
             {
               role: "assistant",
-              content: "Sorry, I had trouble processing your query. Please try again.",
+              content: data.error || "Sorry, I had trouble processing your query. Please try again.",
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             },
           ]);
@@ -143,7 +155,7 @@ export function AIAssistantWidget({ initialPrompt = "" }: { initialPrompt?: stri
         setIsTyping(false);
       }
     },
-    [input, selectedLang]
+    [input, selectedLang, isAuthenticated, openAuthModal]
   );
 
   useEffect(() => {

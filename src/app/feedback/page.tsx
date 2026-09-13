@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { MessageSquarePlus, Star, Send, CheckCircle2, Sparkles, MapPin } from "lucide-react";
 import { GlassCard, Button } from "@/components/ui/GlassCard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function FeedbackPage() {
   const [activeTab, setActiveTab] = useState<"FEEDBACK" | "SUGGEST">("SUGGEST");
@@ -81,20 +82,24 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-10">
-      {/* Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 mb-1">
-          <MessageSquarePlus className="w-3.5 h-3.5" />
-          <span>Crowdsourced Accuracy</span>
+    <AuthGuard
+      title="Suggest a Place & Share Feedback"
+      description="Sign in or create an account to suggest a new hidden spot, report corrections, or submit feedback to the Banaras Darshan moderation team."
+    >
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-10">
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 mb-1">
+            <MessageSquarePlus className="w-3.5 h-3.5" />
+            <span>Crowdsourced Accuracy</span>
+          </div>
+          <h1 className="text-4xl font-bold text-slate-900 font-serif">
+            Suggest a Place & Share Feedback
+          </h1>
+          <p className="text-slate-600 text-sm font-normal">
+            Help us document every hidden lane, historic shrine, and authentic food shop in Kashi.
+          </p>
         </div>
-        <h1 className="text-4xl font-bold text-slate-900 font-serif">
-          Suggest a Place & Share Feedback
-        </h1>
-        <p className="text-slate-600 text-sm font-normal">
-          Help us document every hidden lane, historic shrine, and authentic food shop in Kashi.
-        </p>
-      </div>
 
       {/* Tabs */}
       <div className="flex items-center justify-center gap-3">
@@ -349,5 +354,6 @@ export default function FeedbackPage() {
         </GlassCard>
       )}
     </div>
+    </AuthGuard>
   );
 }
