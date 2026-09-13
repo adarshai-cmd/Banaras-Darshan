@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
   },
   // Compression & Cache
   compress: true,
+  // Serverless file tracing for database
+  outputFileTracingIncludes: {
+    "/api/**/*": ["./prisma/dev.db"],
+  },
   // Security: Remove X-Powered-By header to prevent fingerprinting
   poweredByHeader: false,
   // Image CDN & caching
