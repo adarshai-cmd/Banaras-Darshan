@@ -102,10 +102,30 @@ Combining cutting-edge web engineering with deep respect for Varanasi's timeless
   - **Directory Manager**: Temples, Ghats, Food, Tourist Places with rich metadata, photos, aarti times, and pricing.
   - **Promotions & Ads**: Full CRUD, image uploads, start/end scheduling, priority weighting, and impressions/clicks CTR analytics.
   - **Weather Settings**: Coordinates configuration, cache duration tuning, and custom travel advisory overrides.
-  - **Infrastructure**: Parking Stands Manager and Nearby Places Cross-Linking.
+  - **Parking Infrastructure**: Dedicated Parking Stands Manager with live direct photo uploads (`/api/bd-admin/upload`), URL paste support, instant photo previews, and automated thumbnail integration on public parking cards.
+  - **Nearby Places Cross-Linking**: Contextual nearby landmarks and transit hubs.
   - **Media Storage**: Upload images directly to server storage (`public/uploads/`) with instant preview.
   - **Moderation Desk**: 1-Click "Approve & Publish" for user-submitted places and report resolution.
   - **AI Directives & Content**: Configure chatbot system prompts, announcement banners, and emergency helplines.
+
+### 10. 📜 Legal, Privacy, User-Consent & Compliance Framework
+- **Full Legal Suite**:
+  - **Privacy Policy (`/privacy-policy`)**: DPDP Act 2023 & GDPR aligned privacy practices, transparent data handling, storage policies, and user privacy rights.
+  - **Terms & Conditions (`/terms-and-conditions`)**: Permitted platform use, IP ownership, user-generated content standards, and Varanasi court jurisdiction.
+  - **Cookie Policy (`/cookie-policy`)**: Granular categorisation of strictly necessary and analytics cookies with local opt-in controls.
+  - **Disclaimer (`/disclaimer`)**: Information accuracy disclaimers, spiritual rituals & Ganga Aarti schedule variability, and third-party commercial disclaimers.
+  - **Community Guidelines (`/community-guidelines`)**: Respecting sacred decorum of Kashi, zero-harassment, river safety etiquette, and reporting mechanisms.
+  - **Accessibility Statement (`/accessibility`)**: WCAG 2.1 AA commitments, keyboard navigation, contrast ratios, and assistive tech support.
+  - **Contact & Support (`/contact`)**: Official communication channels, tourist police helplines (`0542-2508000`), emergency services, and support ticket desk.
+- **Interactive Consent UI**:
+  - **Floating Cookie Consent Banner**: Glassmorphic consent banner with accept/essential preferences and local storage persistence.
+  - **Sign-up Consent Verification**: Mandatory explicit Terms & Privacy consent checkbox during user authentication in `AuthModal`.
+  - **Compliance Footer**: Complete categorized legal navigation bar across all site pages without leaking admin endpoints.
+
+### 11. ⚖️ Dynamic Policy CMS & Versioning Engine (`/bd-admin`)
+- **Database-Backed CMS**: Full `LegalPolicy` and `LegalPolicyHistory` Prisma schema with automatic fallback to canonical policy text.
+- **Live Visual Editor**: Markdown editor with real-time preview, instant status toggles (Draft / Published), and one-click save.
+- **Audit-Ready Versioning**: Automatic semantic version incrementation upon edits, complete revision history logs, and instant rollback capabilities.
 
 ---
 
@@ -154,19 +174,27 @@ Banaras-Darshan/
 │   │   ├── safety/            # Safety hub, official helplines & scams guide
 │   │   ├── feedback/          # User feedback & "Suggest a Place" submission
 │   │   ├── profile/           # User profile & saved itineraries
-│   │   ├── bd-admin/          # Hidden Admin CMS (Auth, Dashboard, CRUD, Moderation)
+│   │   ├── privacy-policy/    # Privacy Policy (GDPR & DPDP Act 2023)
+│   │   ├── terms-and-conditions/ # Terms of Service & UGC standards
+│   │   ├── cookie-policy/     # Cookie usage & consent controls
+│   │   ├── disclaimer/        # Spiritual, navigation & commercial disclaimers
+│   │   ├── community-guidelines/ # Sacred decorum & river safety guidelines
+│   │   ├── accessibility/     # WCAG 2.1 AA accessibility commitment
+│   │   ├── contact/           # Official contact directory & helplines
+│   │   ├── bd-admin/          # Hidden Admin CMS (Auth, Dashboard, CRUD, Legal CMS, Moderation)
 │   │   ├── places/[slug]/     # Dynamic place details page
 │   │   ├── sitemap.ts         # Dynamic SEO XML sitemap generator
 │   │   ├── robots.ts          # Search engine crawler configuration (disallowing /bd-admin)
 │   │   └── api/               # REST API route handlers
-│   │       ├── bd-admin/      # Protected admin endpoints (places, promotions, weather, stats)
+│   │       ├── bd-admin/      # Protected admin endpoints (places, promotions, weather, legal, parking)
 │   │       ├── promotions/    # Public promotions & click telemetry
 │   │       ├── weather/       # Cached live weather & 5-day forecast
 │   │       ├── places/        # Place retrieval and user submissions
 │   │       ├── community/     # Dispatches, threaded replies, helpful votes
 │   │       └── ai/chat/       # Conversational AI assistant
 │   ├── components/
-│   │   ├── ui/                # GlassCard, Button, Badge, SafeImage
+│   │   ├── ui/                # GlassCard, Button, Badge, SafeImage, CookieConsentBanner
+│   │   ├── legal/             # LegalDocumentLayout shared layout shell
 │   │   ├── navigation/        # Navbar, Footer
 │   │   ├── hero/              # CinematicHero, SearchBox
 │   │   ├── promotions/        # PromotionalSlot, MobileCarousel, DetailModal
@@ -180,6 +208,7 @@ Banaras-Darshan/
 │   └── lib/
 │       ├── db.ts              # Singleton Prisma client
 │       ├── auth.ts            # Admin scrypt hashing, sessions, rate limiter & RBAC
+│       ├── legal-defaults.ts  # Fallback canonical legal document corpus & metadata
 │       ├── moderation.ts      # Multi-tier text & safety moderation engine
 │       ├── verification.ts    # Place recommendation verification engine
 │       ├── ai-engine.ts       # Grounded Banaras reasoning engine
@@ -268,6 +297,9 @@ Open your browser and navigate to:
 | `/api/bd-admin/promotions` | `GET`, `POST` | Admin promotions list and campaign creation |
 | `/api/bd-admin/promotions/[id]` | `PUT`, `DELETE` | Admin promotion campaign update and delete |
 | `/api/bd-admin/weather` | `GET`, `POST` | Admin weather parameters configuration |
+| `/api/bd-admin/parking` | `GET`, `POST`, `PUT`, `DELETE` | Admin parking stands management with direct photo integration |
+| `/api/bd-admin/legal` | `GET`, `POST` | Retrieve legal policies / Update policy content & bump version |
+| `/api/bd-admin/legal/[slug]/history` | `GET`, `POST` | Audit revision history log / Rollback policy to a prior version |
 | `/api/bd-admin/upload` | `POST` | Direct multipart file upload to `/public/uploads` |
 
 ---

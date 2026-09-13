@@ -161,6 +161,30 @@ export function AuthModal({
             </div>
           </div>
 
+          {mode === "signup" && (
+            <p className="text-[11px] text-slate-500 leading-relaxed text-center px-1">
+              By creating an account, you agree to Banaras Darshan&apos;s{" "}
+              <a
+                href="/terms-and-conditions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-800 font-semibold hover:underline"
+              >
+                Terms & Conditions
+              </a>{" "}
+              and acknowledge our{" "}
+              <a
+                href="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-800 font-semibold hover:underline"
+              >
+                Privacy Policy
+              </a>
+              .
+            </p>
+          )}
+
           <Button
             type="submit"
             disabled={loading}

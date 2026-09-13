@@ -275,3 +275,32 @@ model Promotion {
   updatedAt            DateTime  @updatedAt
 }
 
+model LegalPolicy {
+  id          String   @id @default(cuid())
+  slug        String   @unique // privacy-policy, terms-and-conditions, cookie-policy, disclaimer, community-guidelines, accessibility
+  title       String
+  category    String   @default("LEGAL") // LEGAL, PRIVACY, GUIDELINES, COMPLIANCE
+  version     String   @default("1.0")
+  status      String   @default("PUBLISHED") // DRAFT, PUBLISHED, UNPUBLISHED
+  summary     String?
+  content     String
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  versions    LegalPolicyHistory[]
+}
+
+model LegalPolicyHistory {
+  id          String      @id @default(cuid())
+  policyId    String
+  version     String
+  content     String
+  summary     String?
+  status      String
+  changeNotes String?
+  archivedAt  DateTime    @default(now())
+
+  policy      LegalPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+}
+

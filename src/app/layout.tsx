@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/navigation/Navbar";
 import { Footer } from "@/components/navigation/Footer";
+import { CookieConsentBanner } from "@/components/ui/CookieConsentBanner";
 
 export const metadata: Metadata = {
   title: "Banaras Darshan | Discover Banaras. Your Way.",
@@ -56,6 +57,7 @@ export default function RootLayout({
         <Navbar />
         <div className="flex-1">{children}</div>
         <Footer />
+        <CookieConsentBanner />
       </body>
     </html>
   );

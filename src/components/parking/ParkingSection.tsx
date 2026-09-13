@@ -58,7 +58,11 @@ export function ParkingSection({
           setParkings(data.parkings);
         }
       })
-      .catch((err) => console.error("ParkingSection fetch error:", err))
+      .catch((err) => {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("ParkingSection fetch error:", err);
+        }
+      })
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });

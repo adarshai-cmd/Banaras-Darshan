@@ -68,7 +68,9 @@ export function BanarasWeatherWidget() {
         }
       }
     } catch (err) {
-      console.error("Weather fetch failed:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Weather fetch failed (using fallback):", err);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +94,9 @@ export function BanarasWeatherWidget() {
           }
         }
       } catch (err) {
-        console.error("Weather fetch failed:", err);
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Weather fetch failed (using fallback):", err);
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);

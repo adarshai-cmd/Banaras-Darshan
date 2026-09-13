@@ -66,7 +66,9 @@ export function LeafletMap({
           }
         }
       } catch (err) {
-        console.error("Map weather fetch error:", err);
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Map weather fetch error:", err);
+        }
       }
     };
     fetchMapWeather();

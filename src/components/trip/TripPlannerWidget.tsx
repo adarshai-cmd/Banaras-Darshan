@@ -84,7 +84,11 @@ export function TripPlannerWidget() {
           setPlaces(data.places);
         }
       })
-      .catch((err) => console.error("Error loading places:", err));
+      .catch((err) => {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Error loading places (using fallback):", err);
+        }
+      });
   }, []);
 
   const handleGenerate = (e: React.FormEvent) => {

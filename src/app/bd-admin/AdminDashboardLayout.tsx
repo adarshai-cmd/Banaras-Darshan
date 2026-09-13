@@ -42,10 +42,12 @@ import {
   SlidersHorizontal,
   Megaphone,
   CloudSun,
+  Scale,
 } from "lucide-react";
 import { PlaceFormModal } from "./components/PlaceFormModal";
 import { PromotionsSection } from "./components/PromotionsSection";
 import { WeatherSettingsSection } from "./components/WeatherSettingsSection";
+import { LegalSettingsSection } from "./components/LegalSettingsSection";
 
 interface AdminUser {
   id: string;
@@ -75,6 +77,7 @@ type TabType =
   | "community"
   | "chatbot"
   | "website"
+  | "legal"
   | "security";
 
 export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps) {
@@ -118,6 +121,7 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
   const [parkings, setParkings] = useState<any[]>([]);
   const [parkingModalOpen, setParkingModalOpen] = useState(false);
   const [editingParking, setEditingParking] = useState<any | null>(null);
+  const [isParkingUploading, setIsParkingUploading] = useState(false);
 
   // Gallery state
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
@@ -400,6 +404,38 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
       }
     } catch {
       showToast("Network error saving parking.", "error");
+    }
+  };
+
+  const handleParkingFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsParkingUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bucket", "places");
+
+    try {
+      const res = await fetch("/api/bd-admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.url) {
+        setEditingParking((prev: any) => ({
+          ...prev,
+          image: data.url,
+        }));
+        showToast("Parking image uploaded successfully!");
+      } else {
+        showToast(data.error || "Failed to upload image.", "error");
+      }
+    } catch {
+      showToast("Network error uploading parking image.", "error");
+    } finally {
+      setIsParkingUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -1126,6 +1162,21 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
 
                 <button
                   onClick={() => {
+                    setCurrentTab("legal");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                    currentTab === "legal"
+                      ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm"
+                      : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                  }`}
+                >
+                  <Scale className="w-4 h-4 text-emerald-400" />
+                  <span>Legal & Policies</span>
+                </button>
+
+                <button
+                  onClick={() => {
                     setCurrentTab("security");
                     setMobileMenuOpen(false);
                   }}
@@ -1172,6 +1223,7 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
                 {currentTab === "community" && "Community QA & Discussions"}
                 {currentTab === "chatbot" && "Banaras AI Chatbot Directives"}
                 {currentTab === "website" && "Website Content & Announcements"}
+                {currentTab === "legal" && "Legal, Privacy & Policy Management"}
                 {currentTab === "security" && "Administrative Security & Credentials"}
               </h1>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -1712,6 +1764,15 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
                     key={p.id}
                     className="rounded-2xl bg-[#161E2E] border border-slate-700/60 p-5 space-y-3 relative overflow-hidden shadow-lg"
                   >
+                    {p.image && (
+                      <div className="relative w-full h-32 rounded-xl overflow-hidden mb-2 bg-slate-900 border border-slate-700/60 group">
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -1756,7 +1817,7 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
                     <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
                       <button
                         onClick={() => {
-                          setEditingParking(p);
+                          setEditingParking({ ...p, image: p.image || "" });
                           setParkingModalOpen(true);
                         }}
                         className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 flex items-center gap-1 transition-colors"
@@ -2479,6 +2540,11 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
           )}
 
           {/* ========================================================== */}
+          {/* TAB: LEGAL & POLICIES */}
+          {/* ========================================================== */}
+          {currentTab === "legal" && <LegalSettingsSection />}
+
+          {/* ========================================================== */}
           {/* TAB: PROMOTIONS & ADVERTISEMENTS */}
           {/* ========================================================== */}
           {currentTab === "promotions" && (
@@ -2523,7 +2589,7 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
       {/* ========================================================== */}
       {parkingModalOpen && editingParking && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-lg rounded-3xl bg-[#161E2E] border border-slate-700 shadow-2xl p-6 space-y-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl bg-[#161E2E] border border-slate-700 shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <SquareParking className="w-5 h-5 text-blue-400" />
@@ -2665,6 +2731,95 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
                   placeholder="Kashi Vishwanath, Dashashwamedh Ghat"
                 />
+              </div>
+
+              {/* Parking Photo / Image */}
+              <div className="space-y-2.5 p-3.5 rounded-2xl bg-slate-900/70 border border-slate-700/80">
+                <label className="text-slate-300 font-semibold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-blue-400" />
+                    <span>Parking Stand Photo</span>
+                  </span>
+                  {editingParking.image && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingParking({ ...editingParking, image: "" })}
+                      className="text-[11px] text-red-400 hover:text-red-300 hover:underline cursor-pointer"
+                    >
+                      Remove Photo
+                    </button>
+                  )}
+                </label>
+
+                {/* Preview if image exists */}
+                {editingParking.image ? (
+                  <div className="relative w-full h-36 rounded-xl overflow-hidden border border-slate-700 group bg-slate-950">
+                    <img
+                      src={editingParking.image}
+                      alt={editingParking.name || "Parking Preview"}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = "none";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <a
+                        href={editingParking.image}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 rounded-lg bg-black/70 text-white text-[10px] font-semibold hover:bg-black flex items-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View Full</span>
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-24 rounded-xl border border-dashed border-slate-700 flex flex-col items-center justify-center text-slate-500 gap-1 bg-slate-950/40">
+                    <SquareParking className="w-6 h-6 text-slate-600" />
+                    <span className="text-[11px]">No parking photo set</span>
+                  </div>
+                )}
+
+                {/* Direct Image URL input & Upload button */}
+                <div className="space-y-2 pt-1">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={editingParking.image || ""}
+                      onChange={(e) =>
+                        setEditingParking({ ...editingParking, image: e.target.value })
+                      }
+                      className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-500"
+                      placeholder="Paste Image URL or upload from computer..."
+                    />
+                    <label className="cursor-pointer shrink-0">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isParkingUploading}
+                        onChange={handleParkingFileUpload}
+                        className="hidden"
+                      />
+                      <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 text-xs font-semibold transition-all">
+                        {isParkingUploading ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Upload File</span>
+                          </>
+                        )}
+                      </span>
+                    </label>
+                  </div>
+                  <p className="text-[10px] text-slate-400">
+                    Upload an entrance/facility photo or paste an image URL to help pilgrims identify the parking stand.
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">

@@ -22,23 +22,40 @@ export function PromotionalSlot({
   const [selectedPromotion, setSelectedPromotion] = useState<PromotionData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch promotions if none passed
+  // Fetch promotions if none passed with robust error handling & abort controller
   useEffect(() => {
     if (initialPromotions.length > 0) return;
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchPromos = async () => {
       try {
-        const res = await fetch(`/api/promotions?placement=${placement}`);
+        const res = await fetch(`/api/promotions?placement=${placement}`, {
+          signal: controller.signal,
+        });
         if (res.ok) {
           const data = await res.json();
-          if (data.success && data.promotions?.length > 0) {
+          if (isMounted && data.success && Array.isArray(data.promotions) && data.promotions.length > 0) {
             setPromotions(data.promotions);
           }
         }
-      } catch (err) {
-        console.error("Promotional slot fetch error:", err);
+      } catch (err: unknown) {
+        // Ignore aborted requests and avoid throwing intrusive dev console errors for optional promotional slots
+        if (err && typeof err === "object" && "name" in err && err.name === "AbortError") {
+          return;
+        }
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Promotional slot temporarily unavailable (fallback to defaults):", err);
+        }
       }
     };
+
     fetchPromos();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [placement, initialPromotions]);
 
   const activePromotion = promotions[currentIndex] || null;

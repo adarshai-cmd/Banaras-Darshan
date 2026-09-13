@@ -23,23 +23,40 @@ export function MobilePromotionalCarousel({
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
-  // Fetch all active promotions on mobile
+  // Fetch all active promotions on mobile with robust error handling & abort controller
   useEffect(() => {
     if (initialPromotions.length > 0) return;
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchPromos = async () => {
       try {
-        const res = await fetch("/api/promotions?placement=ALL");
+        const res = await fetch("/api/promotions?placement=ALL", {
+          signal: controller.signal,
+        });
         if (res.ok) {
           const data = await res.json();
-          if (data.success && data.promotions?.length > 0) {
+          if (isMounted && data.success && Array.isArray(data.promotions) && data.promotions.length > 0) {
             setPromotions(data.promotions);
           }
         }
-      } catch (err) {
-        console.error("Mobile promotional carousel fetch error:", err);
+      } catch (err: unknown) {
+        // Ignore aborted requests and avoid throwing intrusive dev console errors for optional banners
+        if (err && typeof err === "object" && "name" in err && err.name === "AbortError") {
+          return;
+        }
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Promotions carousel temporarily unavailable (fallback to defaults):", err);
+        }
       }
     };
+
     fetchPromos();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [initialPromotions]);
 
   const activePromotion = promotions[currentIndex] || null;

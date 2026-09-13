@@ -110,43 +110,81 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Connect & Help */}
+          {/* Legal & Policies */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-4 tracking-wide uppercase font-serif text-amber-300/90">
-              Community & Help
+              Legal & Policies
             </h4>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/feedback" className="hover:text-amber-300 transition-colors">
-                  Suggest a Place
+                <Link href="/privacy-policy" className="hover:text-amber-300 transition-colors">
+                  Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/feedback" className="hover:text-amber-300 transition-colors">
-                  Submit Feedback & Corrections
+                <Link href="/terms-and-conditions" className="hover:text-amber-300 transition-colors">
+                  Terms & Conditions
                 </Link>
               </li>
-              <li className="pt-2 text-xs text-slate-500">
-                Tourist Police: <span className="text-amber-300 font-mono">0542-2508000</span>
+              <li>
+                <Link href="/cookie-policy" className="hover:text-amber-300 transition-colors">
+                  Cookie Policy
+                </Link>
               </li>
-              <li className="text-xs text-slate-500">
-                National Emergency: <span className="text-amber-300 font-mono">112</span>
+              <li>
+                <Link href="/disclaimer" className="hover:text-amber-300 transition-colors">
+                  Disclaimer
+                </Link>
+              </li>
+              <li>
+                <Link href="/community-guidelines" className="hover:text-amber-300 transition-colors">
+                  Community Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link href="/accessibility" className="hover:text-amber-300 transition-colors">
+                  Accessibility Statement
+                </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-14 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        {/* Bottom Bar: Copyright & Direct Legal Navigation */}
+        <div className="mt-14 pt-8 border-t border-white/10 flex flex-col lg:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>© {new Date().getFullYear()} Banaras Darshan. All rights reserved.</p>
+
           <p className="flex items-center gap-1 text-slate-400">
             Crafted with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" /> for the sacred city of Varanasi.
           </p>
-          <div className="flex items-center gap-4">
-            <Link href="/safety" className="hover:text-slate-300">
-              Safety Guidelines
+
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-slate-400 text-xs">
+            <Link href="/privacy-policy" className="hover:text-amber-300 transition-colors">
+              Privacy
             </Link>
-            <Link href="/feedback" className="hover:text-slate-300">
-              Contact
+            <span className="text-white/20">•</span>
+            <Link href="/terms-and-conditions" className="hover:text-amber-300 transition-colors">
+              Terms
+            </Link>
+            <span className="text-white/20">•</span>
+            <Link href="/cookie-policy" className="hover:text-amber-300 transition-colors">
+              Cookies
+            </Link>
+            <span className="text-white/20">•</span>
+            <Link href="/disclaimer" className="hover:text-amber-300 transition-colors">
+              Disclaimer
+            </Link>
+            <span className="text-white/20">•</span>
+            <Link href="/community-guidelines" className="hover:text-amber-300 transition-colors">
+              Guidelines
+            </Link>
+            <span className="text-white/20">•</span>
+            <Link href="/accessibility" className="hover:text-amber-300 transition-colors">
+              Accessibility
+            </Link>
+            <span className="text-white/20">•</span>
+            <Link href="/contact" className="hover:text-amber-300 transition-colors">
+              Contact & Support
             </Link>
           </div>
         </div>
