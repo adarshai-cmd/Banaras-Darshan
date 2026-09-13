@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Lock, Mail, User, Sparkles, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, Lock, Mail, User, Sparkles, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/GlassCard";
 
 interface AuthModalProps {
@@ -21,6 +21,7 @@ export function AuthModal({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -59,16 +60,24 @@ export function AuthModal({
       }
 
       setSuccessMsg(data.message || (mode === "signup" ? "Account created!" : "Welcome back!"));
+      
+      // Save locally for instant hydration across pages
+      if (typeof window !== "undefined" && data.user) {
+        localStorage.setItem("bd_current_user", JSON.stringify(data.user));
+        sessionStorage.setItem("bd_auth_prompt_dismissed", "true");
+      }
+
       if (onSuccess) {
         onSuccess(data.user);
       }
+      
       setTimeout(() => {
         onClose();
         window.location.reload();
-      }, 700);
+      }, 600);
     } catch (err) {
       console.error(err);
-      setError("Network error. Please try again.");
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -171,15 +180,21 @@ export function AuthModal({
           )}
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700">Email Address</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700">
+                {mode === "signup" ? "Email Address or Username / ID" : "Email Address or User ID"}
+              </label>
+              <span className="text-[10px] text-slate-600 font-medium">Email or Username</span>
+            </div>
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder={mode === "signup" ? "e.g. rahul@example.com or rahul_kashi" : "e.g. rahul@example.com or user id"}
+                autoComplete={mode === "signup" ? "username" : "username"}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-500 focus:outline-none text-xs text-slate-900 font-medium transition-all"
               />
             </div>
@@ -190,14 +205,23 @@ export function AuthModal({
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-500 focus:outline-none text-xs text-slate-900 font-medium transition-all"
+                placeholder="•••••••• (min 6 characters)"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-500 focus:outline-none text-xs text-slate-900 font-medium transition-all"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

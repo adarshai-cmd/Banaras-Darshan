@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 export async function GET() {
   try {
@@ -7,6 +8,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       user,
+      supabaseConfigured: isSupabaseConfigured(),
     });
   } catch (error) {
     console.error("Auth me error:", error);

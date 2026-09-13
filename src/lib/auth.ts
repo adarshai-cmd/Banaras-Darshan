@@ -62,14 +62,18 @@ export async function createSession(userId: string): Promise<string> {
  * Sets the session cookie using next/headers cookies().
  */
 export async function setSessionCookie(token: string) {
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE_DAYS * 24 * 60 * 60,
-  });
+  try {
+    const cookieStore = await cookies();
+    cookieStore.set(SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_MAX_AGE_DAYS * 24 * 60 * 60,
+    });
+  } catch {
+    // If called outside Next.js request scope, cookie is set explicitly via NextResponse
+  }
 }
 
 /**

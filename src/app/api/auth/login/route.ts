@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { verifyPassword, createSession, setSessionCookie } from "@/lib/auth";
+import { verifyPassword, hashPassword, createSession, setSessionCookie, SESSION_COOKIE_NAME, SESSION_MAX_AGE_DAYS } from "@/lib/auth";
+import { isSupabaseConfigured, signInWithSupabase } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,54 +10,112 @@ export async function POST(req: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "Email and password are required." },
+        { error: "Email/User ID and password are required." },
         { status: 400 }
       );
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const rawIdentifier = email.trim();
+    const normalizedEmail = rawIdentifier.toLowerCase();
+    const fallbackDomainEmail = rawIdentifier.includes("@")
+      ? normalizedEmail
+      : `${normalizedEmail.replace(/[^a-z0-9._-]/g, "")}@banarasdarshan.com`;
 
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    // 1. Find user in local database by Email, Name, or ID
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: normalizedEmail },
+          { email: fallbackDomainEmail },
+          { name: { equals: rawIdentifier } },
+          { id: rawIdentifier },
+        ],
+      },
     });
 
-    if (!user || !user.passwordHash) {
+    let authenticated = false;
+
+    // 2. If user found locally, verify password hash
+    if (user && user.passwordHash) {
+      authenticated = verifyPassword(password, user.passwordHash);
+    }
+
+    // 3. If not authenticated locally or user not in local DB, attempt Supabase Auth if configured
+    if (!authenticated && isSupabaseConfigured()) {
+      const emailToTry = rawIdentifier.includes("@") ? normalizedEmail : fallbackDomainEmail;
+      try {
+        const sbResult = await signInWithSupabase(emailToTry, password);
+        if (sbResult.success && sbResult.user) {
+          authenticated = true;
+          // Sync or create local user record from Supabase
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                id: sbResult.user.id,
+                name: sbResult.user.user_metadata?.name || rawIdentifier,
+                email: sbResult.user.email || emailToTry,
+                passwordHash: hashPassword(password),
+                role: sbResult.user.user_metadata?.role || "USER",
+                reputation: 10,
+                badge: "New Explorer",
+              },
+            });
+          } else {
+            // Update local password hash to match Supabase
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { passwordHash: hashPassword(password) },
+            });
+          }
+        }
+      } catch (sbErr) {
+        console.warn("Supabase auth verification attempt:", sbErr);
+      }
+    }
+
+    if (!authenticated || !user) {
       return NextResponse.json(
-        { error: "Invalid email or password." },
+        { error: "Invalid Email/User ID or password. Please verify your credentials." },
         { status: 401 }
       );
     }
 
-    const isMatch = verifyPassword(password, user.passwordHash);
-    if (!isMatch) {
-      return NextResponse.json(
-        { error: "Invalid email or password." },
-        { status: 401 }
-      );
-    }
-
-    // Create session and set cookie
+    // 4. Create persistent session and set cookie
     const token = await createSession(user.id);
     await setSessionCookie(token);
 
-    return NextResponse.json({
+    const safeUser = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      avatar: user.avatar,
+      bio: user.bio,
+      role: user.role,
+      reputation: user.reputation,
+      badge: user.badge,
+    };
+
+    const response = NextResponse.json({
       success: true,
       message: "Logged in successfully.",
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        avatar: user.avatar,
-        bio: user.bio,
-        role: user.role,
-        reputation: user.reputation,
-        badge: user.badge,
-      },
+      user: safeUser,
+      supabaseConnected: isSupabaseConfigured(),
     });
-  } catch (error) {
+
+    // Explicitly reinforce session cookie on outgoing response
+    response.cookies.set(SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_MAX_AGE_DAYS * 24 * 60 * 60,
+    });
+
+    return response;
+  } catch (error: any) {
     console.error("Login error:", error);
     return NextResponse.json(
-      { error: "Login failed. Please try again." },
+      { error: error?.message || "Login failed. Please try again." },
       { status: 500 }
     );
   }

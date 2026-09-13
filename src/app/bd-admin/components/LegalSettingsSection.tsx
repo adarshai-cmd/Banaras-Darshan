@@ -747,7 +747,7 @@ export function LegalSettingsSection() {
 
                     {rev.changeNotes && (
                       <p className="text-xs text-slate-700 italic">
-                        "{rev.changeNotes}"
+                        &ldquo;{rev.changeNotes}&rdquo;
                       </p>
                     )}
 

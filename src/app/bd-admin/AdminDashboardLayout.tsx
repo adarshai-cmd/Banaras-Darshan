@@ -43,11 +43,13 @@ import {
   Megaphone,
   CloudSun,
   Scale,
+  Users,
 } from "lucide-react";
 import { PlaceFormModal } from "./components/PlaceFormModal";
 import { PromotionsSection } from "./components/PromotionsSection";
 import { WeatherSettingsSection } from "./components/WeatherSettingsSection";
 import { LegalSettingsSection } from "./components/LegalSettingsSection";
+import { UsersCredentialsSection } from "./components/UsersCredentialsSection";
 
 interface AdminUser {
   id: string;
@@ -78,6 +80,7 @@ type TabType =
   | "chatbot"
   | "website"
   | "legal"
+  | "users"
   | "security";
 
 export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps) {
@@ -1177,6 +1180,26 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
 
                 <button
                   onClick={() => {
+                    setCurrentTab("users");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                    currentTab === "users"
+                      ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm"
+                      : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Users className="w-4 h-4 text-amber-400" />
+                    <span>Users & Supabase</span>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+                    {stats.totalUsers || "All"}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
                     setCurrentTab("security");
                     setMobileMenuOpen(false);
                   }}
@@ -1224,6 +1247,7 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
                 {currentTab === "chatbot" && "Banaras AI Chatbot Directives"}
                 {currentTab === "website" && "Website Content & Announcements"}
                 {currentTab === "legal" && "Legal, Privacy & Policy Management"}
+                {currentTab === "users" && "Login Credentials & Supabase Control"}
                 {currentTab === "security" && "Administrative Security & Credentials"}
               </h1>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -1475,6 +1499,20 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
                     {stats.activePromotions || 0} <span className="text-xs text-slate-400 font-normal">/ {stats.totalPromotions || 0} active</span>
                   </div>
                   <span className="text-[11px] text-slate-400">Hero banners & ad cards</span>
+                </div>
+
+                <div
+                  onClick={() => setCurrentTab("users")}
+                  className="p-4 rounded-2xl bg-[#161E2E] border border-slate-700/60 hover:border-amber-500/50 cursor-pointer transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-400">User Accounts</span>
+                    <Users className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="mt-2 text-xl font-bold text-white font-mono">
+                    {stats.totalUsers}
+                  </div>
+                  <span className="text-[11px] text-slate-400">Login credentials & Supabase</span>
                 </div>
               </div>
 
@@ -2556,6 +2594,13 @@ export function AdminDashboardLayout({ currentUser }: AdminDashboardLayoutProps)
           {/* ========================================================== */}
           {currentTab === "weather" && (
             <WeatherSettingsSection onShowToast={showToast} />
+          )}
+
+          {/* ========================================================== */}
+          {/* TAB: USERS & SUPABASE CREDENTIALS */}
+          {/* ========================================================== */}
+          {currentTab === "users" && (
+            <UsersCredentialsSection onShowToast={showToast} />
           )}
         </main>
       </div>

@@ -100,11 +100,12 @@ Combining cutting-edge web engineering with deep respect for Varanasi's timeless
 - **Cryptographic Security**: Node.js `crypto.scryptSync` salted hashing, constant-time `crypto.timingSafeEqual` password verification, HTTP-only secure session cookies, and 15-minute brute-force lockout after 5 failed attempts.
 - **Comprehensive CMS Sections**:
   - **Directory Manager**: Temples, Ghats, Food, Tourist Places with rich metadata, photos, aarti times, and pricing.
+  - **Login Credentials & Supabase Control**: View all registered accounts, manage roles (`ADMIN`, `MODERATOR`, `USER`), instant password resets/changes, manual user creation, and real-time Supabase cloud synchronization.
   - **Promotions & Ads**: Full CRUD, image uploads, start/end scheduling, priority weighting, and impressions/clicks CTR analytics.
   - **Weather Settings**: Coordinates configuration, cache duration tuning, and custom travel advisory overrides.
   - **Parking Infrastructure**: Dedicated Parking Stands Manager with live direct photo uploads (`/api/bd-admin/upload`), URL paste support, instant photo previews, and automated thumbnail integration on public parking cards.
   - **Nearby Places Cross-Linking**: Contextual nearby landmarks and transit hubs.
-  - **Media Storage**: Upload images directly to server storage (`public/uploads/`) with instant preview.
+  - **Media Storage**: Upload images directly to server storage (`public/uploads/`) or Supabase Storage with instant preview.
   - **Moderation Desk**: 1-Click "Approve & Publish" for user-submitted places and report resolution.
   - **AI Directives & Content**: Configure chatbot system prompts, announcement banners, and emergency helplines.
 
@@ -127,12 +128,13 @@ Combining cutting-edge web engineering with deep respect for Varanasi's timeless
 - **Live Visual Editor**: Markdown editor with real-time preview, instant status toggles (Draft / Published), and one-click save.
 - **Audit-Ready Versioning**: Automatic semantic version incrementation upon edits, complete revision history logs, and instant rollback capabilities.
 
-### 12. 🔐 Explorer Access Control & Preview Gating
-- **Guest Front-Page Preview**: Unauthenticated visitors receive an inviting taste of Varanasi (Cinematic Hero and Today in Banaras Ganga Aarti & Sunrise schedules).
-- **Auto Sign In / Create Account Trigger**: On arrival at the homepage, the auth modal automatically welcomes guests with clean segmented tabs for **"Sign In"** and **"Create My Account"**.
-- **Homepage Gate**: Deep interactive widgets (Full Catalog, AI Assistant, Traveler Community, GPS Radar, Route Planner) are blurred and locked behind an "Unlock Full Access" card.
-- **Full Route Protection (`AuthGuard`)**: Direct visits to explore, temples, ghats, food, stay, hidden, parking, map, plan, community, and AI guide require an explorer account.
-- **Backend API Protection**: `/api/ai/chat` and community dispatches strictly reject unauthenticated calls with HTTP 401.
+### 12. 🔐 Explorer Access Control, Dual-Sync Auth & Supabase Integration
+- **Flexible Identifier Login**: Users can register and sign in using **either** standard email addresses or simple usernames / User IDs. Handles without `@` are automatically formatted and preserved.
+- **Dual-Sync Supabase Authentication**: When Supabase is configured, accounts are automatically registered in Supabase Auth and synced with the local database. When Supabase is in standby or keys are pending, it falls back seamlessly to the database with zero interruptions.
+- **Password Visibility Toggle**: Interactive show/hide password toggle (`Eye` icon) in the authentication modal prevents typing mistakes.
+- **Zero-Flicker Optimistic Hydration**: Instant authentication restore via `localStorage` in `AuthContext` ensures users never experience layout flashing or unexpected guest lock prompts.
+- **Route Protection (`AuthGuard`)**: Direct visits to explore, temples, ghats, food, stay, hidden, parking, map, plan, community, and AI guide require an explorer account while allowing visitors a preview on the homepage.
+- **Backend API Protection**: `/api/ai/chat` and community dispatches strictly require authenticated sessions.
 
 ---
 
@@ -296,8 +298,15 @@ Open your browser and navigate to:
 | `/api/community/replies` | `GET`, `POST` | Threaded discussion replies |
 | `/api/community/helpful` | `POST` | Upvote helpful messages and award reputation points |
 | `/api/community/report` | `POST` | Report a message for moderator investigation |
+| `/api/auth/signup` | `POST` | Explorer registration (Email or Username handle, Supabase sync) |
+| `/api/auth/login` | `POST` | Explorer sign in (Email or Username handle, session cookie) |
+| `/api/auth/me` | `GET` | Retrieve current authenticated user profile & Supabase status |
+| `/api/auth/logout` | `POST` | End explorer session & delete auth cookie |
 | `/api/ai/chat` | `POST` | Grounded conversational AI assistant response generation |
 | `/api/bd-admin/auth` | `POST`, `DELETE` | Authenticate admin user / Destroy session |
+| `/api/bd-admin/users` | `GET`, `POST`, `PUT`, `DELETE` | Full user management, role assignment & password reset |
+| `/api/bd-admin/users/sync` | `POST` | Test Supabase connectivity & sync users to Supabase Auth |
+| `/api/bd-admin/users/config-supabase` | `GET`, `POST` | Read & configure Supabase keys dynamically from UI |
 | `/api/bd-admin/stats` | `GET` | Retrieve CMS overview statistics and counts |
 | `/api/bd-admin/places` | `GET`, `POST` | Admin places list and create endpoint |
 | `/api/bd-admin/places/[id]`| `PUT`, `DELETE` | Admin place edit and delete endpoint |
