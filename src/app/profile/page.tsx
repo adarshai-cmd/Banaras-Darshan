@@ -45,11 +45,11 @@ export default async function ProfilePage() {
       where: { userId: currentUser.id },
       include: { place: true },
       orderBy: { createdAt: "desc" },
-    }),
+    }).catch(() => []),
     prisma.trip.findMany({
       where: { userId: currentUser.id },
       orderBy: { createdAt: "desc" },
-    }),
+    }).catch(() => []),
   ]);
 
   const savedPlaces = savedPlacesRecords.map((sp) => sp.place);

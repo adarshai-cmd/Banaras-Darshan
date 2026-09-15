@@ -80,10 +80,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Create persistent session and set cookie
-    const token = await createSession(user.id);
-    await setSessionCookie(token);
-
     const safeUser = {
       id: user.id,
       email: user.email,
@@ -94,6 +90,10 @@ export async function POST(req: NextRequest) {
       reputation: user.reputation,
       badge: user.badge,
     };
+
+    // 4. Create persistent session and set cookie
+    const token = await createSession(safeUser);
+    await setSessionCookie(token);
 
     const response = NextResponse.json({
       success: true,
