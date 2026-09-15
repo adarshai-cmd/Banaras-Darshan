@@ -1,9 +1,9 @@
 import { createClient, SupabaseClient, User as SupabaseUser } from "@supabase/supabase-js";
 
 // Runtime config cache (can be augmented dynamically from SiteSetting if configured via Admin)
-let runtimeSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-let runtimeSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-let runtimeSupabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+let runtimeSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+let runtimeSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "";
+let runtimeSupabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
 
 export function setRuntimeSupabaseCredentials(url: string, anonKey: string, serviceKey?: string) {
   runtimeSupabaseUrl = url.trim();
@@ -17,14 +17,14 @@ export function setRuntimeSupabaseCredentials(url: string, anonKey: string, serv
 }
 
 export function getSupabaseConfig() {
+  const url = runtimeSupabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const anonKey = runtimeSupabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "";
+  const serviceRoleKey = runtimeSupabaseServiceKey || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
   return {
-    url: runtimeSupabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    anonKey: runtimeSupabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-    serviceRoleKey: runtimeSupabaseServiceKey || process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-    isConfigured: Boolean(
-      (runtimeSupabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-      (runtimeSupabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || runtimeSupabaseServiceKey || process.env.SUPABASE_SERVICE_ROLE_KEY)
-    ),
+    url,
+    anonKey,
+    serviceRoleKey,
+    isConfigured: Boolean(url && (anonKey || serviceRoleKey)),
   };
 }
 
