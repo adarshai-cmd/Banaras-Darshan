@@ -1,9 +1,17 @@
 import { createClient, SupabaseClient, User as SupabaseUser } from "@supabase/supabase-js";
+import { createBrowserClient, createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 // Runtime config cache (can be augmented dynamically from SiteSetting if configured via Admin)
 let runtimeSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-let runtimeSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "";
-let runtimeSupabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
+let runtimeSupabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  "";
+let runtimeSupabaseServiceKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
 
 export function setRuntimeSupabaseCredentials(url: string, anonKey: string, serviceKey?: string) {
   runtimeSupabaseUrl = url.trim();
@@ -11,15 +19,28 @@ export function setRuntimeSupabaseCredentials(url: string, anonKey: string, serv
   if (serviceKey !== undefined) {
     runtimeSupabaseServiceKey = serviceKey.trim();
   }
-  // Reset cached clients
-  browserClient = null;
-  adminClient = null;
+  cachedBrowserClient = null;
+  cachedAdminClient = null;
 }
 
 export function getSupabaseConfig() {
-  const url = runtimeSupabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const anonKey = runtimeSupabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "";
-  const serviceRoleKey = runtimeSupabaseServiceKey || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
+  const url =
+    runtimeSupabaseUrl ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    "";
+  const anonKey =
+    runtimeSupabaseAnonKey ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    "";
+  const serviceRoleKey =
+    runtimeSupabaseServiceKey ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    "";
   return {
     url,
     anonKey,
@@ -28,80 +49,109 @@ export function getSupabaseConfig() {
   };
 }
 
-/**
- * Check whether Supabase environment variables or runtime keys are configured.
- */
 export function isSupabaseConfigured(): boolean {
   return getSupabaseConfig().isConfigured;
 }
 
-let browserClient: SupabaseClient | null = null;
-let adminClient: SupabaseClient | null = null;
+let cachedBrowserClient: SupabaseClient | null = null;
+let cachedAdminClient: SupabaseClient | null = null;
 
-/**
- * Get or initialize the public browser Supabase client (using anon key).
- * Returns null if Supabase credentials are not configured.
- */
 export function getSupabaseClient(): SupabaseClient | null {
   const { url, anonKey } = getSupabaseConfig();
   if (!url || !anonKey) {
     return null;
   }
-  if (!browserClient) {
-    browserClient = createClient(url, anonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-      },
-    });
+  if (!cachedBrowserClient) {
+    if (typeof window !== "undefined") {
+      cachedBrowserClient = createBrowserClient(url, anonKey);
+    } else {
+      cachedBrowserClient = createClient(url, anonKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      });
+    }
   }
-  return browserClient;
+  return cachedBrowserClient;
 }
 
-/**
- * Get or initialize the privileged server-side Supabase client (using Service Role Key).
- * CAUTION: Only invoke this on the server (API routes / server actions).
- * NEVER expose the service role client or key to client components.
- */
+export async function createSupabaseServerClient() {
+  const { url, anonKey } = getSupabaseConfig();
+  if (!url || !anonKey) {
+    return null;
+  }
+  const cookieStore = await cookies();
+  return createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // Server component read only
+        }
+      },
+    },
+  });
+}
+
 export function getSupabaseAdminClient(): SupabaseClient | null {
   const { url, serviceRoleKey, anonKey } = getSupabaseConfig();
   const keyToUse = serviceRoleKey || anonKey;
   if (!url || !keyToUse) {
     return null;
   }
-  if (!adminClient) {
-    adminClient = createClient(url, keyToUse, {
+  if (!cachedAdminClient) {
+    cachedAdminClient = createClient(url, keyToUse, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
       },
     });
   }
-  return adminClient;
+  return cachedAdminClient;
 }
-
-// ----------------------------------------------------
-// Supabase Authentication Operations
-// ----------------------------------------------------
 
 export interface SupabaseAuthResult {
   success: boolean;
   user?: SupabaseUser | null;
   error?: string;
+  code?: string;
   session?: any;
 }
 
-/**
- * Sign up a new user directly in Supabase Auth.
- * Uses admin API if service role key is present to auto-confirm email for immediate login.
- */
+export interface SupabaseProfile {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url?: string | null;
+  role: string;
+  badge?: string | null;
+  reputation?: number;
+  bio?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export async function signUpWithSupabase(
   email: string,
   password: string,
   metadata?: { name?: string; role?: string; avatar?: string }
 ): Promise<SupabaseAuthResult> {
+  const config = getSupabaseConfig();
+  if (!config.isConfigured) {
+    return { success: false, error: "Supabase is not configured", code: "not_configured" };
+  }
+
   const admin = getSupabaseAdminClient();
-  if (admin && (runtimeSupabaseServiceKey || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+  const hasServiceKey = Boolean(config.serviceRoleKey);
+
+  if (admin && hasServiceKey) {
     try {
       const { data, error } = await admin.auth.admin.createUser({
         email,
@@ -110,18 +160,26 @@ export async function signUpWithSupabase(
         user_metadata: metadata || {},
       });
       if (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: error.message, code: (error as any).code };
+      }
+      if (data.user) {
+        await upsertSupabaseProfile({
+          id: data.user.id,
+          email: data.user.email || email,
+          name: metadata?.name || email.split("@")[0],
+          role: metadata?.role || "USER",
+          badge: "New Explorer",
+        });
       }
       return { success: true, user: data.user };
     } catch (err: any) {
-      return { success: false, error: err?.message || "Failed to create Supabase user" };
+      return { success: false, error: err?.message || "Failed to create user in Supabase Auth" };
     }
   }
 
-  // Fallback to public client
   const client = getSupabaseClient() || admin;
   if (!client) {
-    return { success: false, error: "Supabase client not configured" };
+    return { success: false, error: "Supabase client unavailable" };
   }
 
   try {
@@ -133,7 +191,16 @@ export async function signUpWithSupabase(
       },
     });
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error.message, code: (error as any).code };
+    }
+    if (data.user) {
+      await upsertSupabaseProfile({
+        id: data.user.id,
+        email: data.user.email || email,
+        name: metadata?.name || email.split("@")[0],
+        role: metadata?.role || "USER",
+        badge: "New Explorer",
+      });
     }
     return { success: true, user: data.user, session: data.session };
   } catch (err: any) {
@@ -141,16 +208,18 @@ export async function signUpWithSupabase(
   }
 }
 
-/**
- * Sign in existing user with Supabase Auth using email & password.
- */
 export async function signInWithSupabase(
   email: string,
   password: string
 ): Promise<SupabaseAuthResult> {
+  const config = getSupabaseConfig();
+  if (!config.isConfigured) {
+    return { success: false, error: "Supabase client not configured", code: "not_configured" };
+  }
+
   const client = getSupabaseClient() || getSupabaseAdminClient();
   if (!client) {
-    return { success: false, error: "Supabase client not configured" };
+    return { success: false, error: "Supabase client not initialized", code: "not_initialized" };
   }
 
   try {
@@ -159,17 +228,113 @@ export async function signInWithSupabase(
       password,
     });
     if (error) {
-      return { success: false, error: error.message };
+      const msg = error.message.toLowerCase();
+      let code = "invalid_credentials";
+      if (msg.includes("confirm") || msg.includes("not confirmed")) {
+        code = "email_not_confirmed";
+      } else if (msg.includes("not found") || msg.includes("no user")) {
+        code = "user_not_found";
+      }
+      return { success: false, error: error.message, code };
     }
     return { success: true, user: data.user, session: data.session };
   } catch (err: any) {
-    return { success: false, error: err?.message || "Supabase login error" };
+    return { success: false, error: err?.message || "Supabase login network error", code: "network_error" };
   }
 }
 
-/**
- * Admin: Create a new user with pre-confirmed email and custom attributes.
- */
+export async function signOutWithSupabase(): Promise<{ success: boolean; error?: string }> {
+  const client = getSupabaseClient();
+  if (!client) return { success: true };
+  try {
+    const { error } = await client.auth.signOut();
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message };
+  }
+}
+
+export async function fetchSupabaseProfile(userId: string): Promise<SupabaseProfile | null> {
+  const client = getSupabaseAdminClient() || getSupabaseClient();
+  if (!client) return null;
+
+  try {
+    const { data: profile, error: profileErr } = await client
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!profileErr && profile) {
+      return {
+        id: profile.id,
+        email: profile.email,
+        name: profile.name || profile.full_name || profile.email?.split("@")[0] || "Explorer",
+        avatar_url: profile.avatar_url,
+        role: profile.role || "USER",
+        badge: profile.badge || "New Explorer",
+        reputation: profile.reputation ?? 10,
+        bio: profile.bio || null,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+      };
+    }
+
+    const { data: userRow, error: userErr } = await client
+      .from("User")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!userErr && userRow) {
+      return {
+        id: userRow.id,
+        email: userRow.email,
+        name: userRow.name || userRow.email?.split("@")[0] || "Explorer",
+        avatar_url: userRow.avatar,
+        role: userRow.role || "USER",
+        badge: userRow.badge || "New Explorer",
+        reputation: userRow.reputation ?? 10,
+        bio: userRow.bio || null,
+        created_at: userRow.createdAt,
+        updated_at: userRow.updatedAt,
+      };
+    }
+
+    return null;
+  } catch (err) {
+    console.warn("Notice: fetchSupabaseProfile error:", err);
+    return null;
+  }
+}
+
+export async function upsertSupabaseProfile(profile: SupabaseProfile): Promise<boolean> {
+  const client = getSupabaseAdminClient() || getSupabaseClient();
+  if (!client) return false;
+
+  try {
+    await client.from("profiles").upsert(
+      {
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        avatar_url: profile.avatar_url || null,
+        role: profile.role || "USER",
+        badge: profile.badge || "New Explorer",
+        reputation: profile.reputation ?? 10,
+        bio: profile.bio || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    );
+    return true;
+  } catch (err) {
+    console.warn("Notice: upsertSupabaseProfile error:", err);
+    return false;
+  }
+}
+
 export async function adminCreateSupabaseUser(
   email: string,
   password: string,
@@ -190,15 +355,21 @@ export async function adminCreateSupabaseUser(
     if (error) {
       return { success: false, error: error.message };
     }
+    if (data.user) {
+      await upsertSupabaseProfile({
+        id: data.user.id,
+        email: data.user.email || email,
+        name: metadata?.name || email.split("@")[0],
+        role: metadata?.role || "USER",
+        badge: metadata?.badge || "New Explorer",
+      });
+    }
     return { success: true, user: data.user };
   } catch (err: any) {
     return { success: false, error: err?.message || "Admin user creation failed" };
   }
 }
 
-/**
- * Admin: Update user password or metadata in Supabase Auth.
- */
 export async function adminUpdateSupabaseUser(
   userId: string,
   updates: { password?: string; email?: string; user_metadata?: Record<string, any> }
@@ -219,9 +390,6 @@ export async function adminUpdateSupabaseUser(
   }
 }
 
-/**
- * Admin: Delete a user from Supabase Auth.
- */
 export async function adminDeleteSupabaseUser(userId: string): Promise<{ success: boolean; error?: string }> {
   const admin = getSupabaseAdminClient();
   if (!admin) {
@@ -239,9 +407,6 @@ export async function adminDeleteSupabaseUser(userId: string): Promise<{ success
   }
 }
 
-/**
- * Admin: List all users from Supabase Auth.
- */
 export async function adminListSupabaseUsers(): Promise<{ success: boolean; users: SupabaseUser[]; error?: string }> {
   const admin = getSupabaseAdminClient();
   if (!admin) {
@@ -259,9 +424,6 @@ export async function adminListSupabaseUsers(): Promise<{ success: boolean; user
   }
 }
 
-/**
- * Test connectivity to Supabase project.
- */
 export async function testSupabaseConnectivity(): Promise<{
   connected: boolean;
   url: string;
@@ -285,11 +447,11 @@ export async function testSupabaseConnectivity(): Promise<{
 
   const startTime = Date.now();
   try {
-    const healthUrl = `${config.url.replace(/\/$/, "")}/rest/v1/`;
+    const healthUrl = config.url.replace(/\/$/, "") + "/rest/v1/";
     const res = await fetch(healthUrl, {
       headers: {
         apikey: config.anonKey || config.serviceRoleKey || "",
-        Authorization: `Bearer ${config.serviceRoleKey || config.anonKey || ""}`,
+        Authorization: "Bearer " + (config.serviceRoleKey || config.anonKey || ""),
       },
     });
 
@@ -314,8 +476,8 @@ export async function testSupabaseConnectivity(): Promise<{
       hasServiceRoleKey: Boolean(config.serviceRoleKey),
       authWorking,
       message: connected
-        ? `Successfully connected to Supabase (${latencyMs}ms).`
-        : `Supabase host responded with status ${res.status}.`,
+        ? "Successfully connected to Supabase (" + latencyMs + "ms)."
+        : "Supabase host responded with status " + res.status + ".",
       latencyMs,
     };
   } catch (err: any) {
@@ -325,15 +487,11 @@ export async function testSupabaseConnectivity(): Promise<{
       hasAnonKey: Boolean(config.anonKey),
       hasServiceRoleKey: Boolean(config.serviceRoleKey),
       authWorking: false,
-      message: `Failed to connect to Supabase: ${err?.message || "Network unreachable"}`,
+      message: "Failed to connect to Supabase: " + (err?.message || "Network unreachable"),
       latencyMs: Date.now() - startTime,
     };
   }
 }
-
-// ----------------------------------------------------
-// Storage Helpers
-// ----------------------------------------------------
 
 export interface StorageUploadOptions {
   bucket?: string;
@@ -343,10 +501,6 @@ export interface StorageUploadOptions {
   upsert?: boolean;
 }
 
-/**
- * Upload a binary image or asset to Supabase Storage.
- * Returns the public URL of the uploaded asset, or null if Supabase is not configured.
- */
 export async function uploadToSupabaseStorage({
   bucket = "places",
   path,
@@ -367,11 +521,10 @@ export async function uploadToSupabaseStorage({
     });
 
   if (error) {
-    console.error(`Supabase Storage upload error in bucket '${bucket}':`, error);
-    throw new Error(`Storage upload failed: ${error.message}`);
+    console.error("Supabase Storage upload error in bucket: " + bucket, error);
+    throw new Error("Storage upload failed: " + error.message);
   }
 
-  // Retrieve public CDN URL
   const { data: publicUrlData } = client.storage
     .from(bucket)
     .getPublicUrl(data.path);
@@ -379,9 +532,6 @@ export async function uploadToSupabaseStorage({
   return publicUrlData.publicUrl;
 }
 
-/**
- * Delete an asset from Supabase Storage by bucket and path.
- */
 export async function deleteFromSupabaseStorage(
   bucket: string,
   path: string
@@ -393,15 +543,12 @@ export async function deleteFromSupabaseStorage(
 
   const { error } = await client.storage.from(bucket).remove([path]);
   if (error) {
-    console.error(`Supabase Storage delete error in bucket '${bucket}':`, error);
+    console.error("Supabase Storage delete error in bucket: " + bucket, error);
     return false;
   }
   return true;
 }
 
-/**
- * Get public URL for a given bucket and path.
- */
 export function getSupabaseStoragePublicUrl(
   bucket: string,
   path: string

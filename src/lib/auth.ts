@@ -180,10 +180,14 @@ export async function destroySession() {
       await prisma.session.deleteMany({
         where: { token },
       }).catch(() => {});
-      cookieStore.delete(SESSION_COOKIE_NAME);
+      try {
+        cookieStore.delete(SESSION_COOKIE_NAME);
+      } catch {
+        // Ignore if immutable in server component
+      }
     }
-  } catch (err) {
-    console.error("Error destroying session:", err);
+  } catch {
+    // Expected when invoked outside Next.js request scope
   }
 }
 
